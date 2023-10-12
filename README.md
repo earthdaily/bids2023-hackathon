@@ -1,8 +1,17 @@
-# bids-hackation
-This repository contains scripts and notebooks for the EDA Hackathon at [BiDS 2023](https://www.bigdatafromspace2023.org/). Roughly speaking we have material more focussed on data access and visualisation under the STAC category, and material for machine learning (ML). Of course you can combine these, e.g. train a model, then inference on data via STAC to build cool applications!
+<div align="center">
+  <p>
+    <a href="https://pages.earthdaily.com/hackathon">
+        <img src="banner.png" width="700">
+    </a>
+</p>
+</div>
+
+This repository contains scripts and notebooks for the [EarthDaily Aanalytics Hackathon](https://pages.earthdaily.com/hackathon) at [BiDS 2023](https://www.bigdatafromspace2023.org/). Roughly speaking we have material more focussed on data access and visualisation under the STAC category, and material for machine learning (ML). Of course you can combine these, e.g. train a model, then inference on data via STAC to build cool applications!
 
 # Setup & authentication
-In Goolge Colab & AWS Sagemaker Studio you just need to `pip install -r requirements.txt`
+To run the STAC notebooks without leaving Github you can use the 'Open in codespace' button, which will be demonstrated.
+
+In [Goolge Colab](https://research.google.com/colaboratory/), [AWS Sagemaker Studio Lab](https://studiolab.sagemaker.aws/) or on [lightning.ai](https://lightning.ai/) you just need to `pip install -r requirements.txt`
 
 If querying the EDA STAC API is necessary to have authentication setup via a `.env` file (or using env variables if you prefer). Copy and rename `.env.sample` to `.env` and enter your credentials - note these are gitignored and will not be pushed! These notebooks have not been tested with other STAC endpoints, but should work with only minor modifications if the data is formatted differently.
 
@@ -14,6 +23,9 @@ This notebook demonstrates querying the EDA STAC API for a Venus chip using an R
 This notebook demonstrates querying the EDA STAC API for a Venus chip using an ROI, saving RGB PNG and multispectral Geotiffs, and then using this imagery to train a simple model for building/not-building pixel level prediction. Note: running this notebook requires downloading the Colorado geojson file from [USBuildingFootprints](https://github.com/microsoft/USBuildingFootprints)
 
 # Notebooks - ML
+Note that for faster training of the models you should use a machine with a GPU. Both [Goolge Colab](https://research.google.com/colaboratory/) and [lightning.ai](https://lightning.ai/) provide limited access to free GPUs which will be sufficient to run the notebooks below.
+
+
 ### train-eurosat.ipynb
 This notebook demonstrates training a classifier on a Sentinel 2 dataset called [EuroSAT](https://github.com/phelber/EuroSAT). Training will be slow on a CPU so use a GPU machine. Experiment with the choice of model, hyperparameters and pretrained weights to iachieve the best performance you can. Once you are satisfied with the model performance, inference on data from the EDA STAC API to create an interesting application. Note: using the [wandb logger](https://wandb.ai/) is possible with a free account
 
