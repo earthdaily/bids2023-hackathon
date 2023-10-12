@@ -1,7 +1,7 @@
 <div align="center">
   <p>
     <a href="https://pages.earthdaily.com/hackathon">
-        <img src="banner.png" width="700">
+        <img src="banner.png" width="1100">
     </a>
 </p>
 </div>
