@@ -32,6 +32,9 @@ This notebook demonstrates training a chip classifier on a Sentinel 2 dataset ca
 ### predict-eurosat.ipynb
 This notebook demonstrates how to use your trained model to make predictions on imagery. A prediction is performed on a single image chip (feasible on CPU and with serveress inferencing) and also performed on a 5400 chip test dataset in batch mode (suitable for GPU machines and longer running processes such as AWS batch). A confusion matrix is plotted to allow inspection of the model performance, but you could experiment and create whole applications using this model
 
+## oscd-train.ipynb
+Shows training change detection model on OSCD dataset - to be extended with Venus dataset
+
 # License
 TBC
 
