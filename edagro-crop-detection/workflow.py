@@ -1,0 +1,174 @@
+# -*- coding: utf-8 -*-
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: -all
+#     formats: ipynb,py:percent
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.15.2
+#   kernelspec:
+#     display_name: Python 3 (ipykernel)
+#     language: python
+#     name: python3
+# ---
+
+# %%
+from matplotlib import pyplot as plt
+from earthdaily import earthdatastore
+from earthdaily.earthdatastore import cube_utils
+import geopandas as gpd
+import numpy as np
+import os
+import tqdm
+import xarray as xr
+import utils
+
+# %%
+os.environ["GDAL_DATA"] = os.environ["CONDA_PREFIX"] + r"\Library\share\gdal"
+os.environ["PROJ_LIB"] = os.environ["CONDA_PREFIX"] + r"\Library\share\proj"
+
+# %% [markdown]
+# ## Generate dataset from the earthdaily simulation
+#
+# The earthdaily simulated dataset is a simulation using various Sensors (Venus, Sentinel-2, Landsat, Modis) in order to have a cloudless version of what will be available when the EarthDaily constellation will be here. 5m spatial resolution on VNIR bands, daily revisit, radiometric scientific grade quality...
+# As it is cloudless, it is an Analytics Ready Product.
+
+
+# %%
+year = 2020
+df = utils.get_df(year)
+bbox = df.to_crs(4326).total_bounds.tolist()
+
+# %%
+generate_dataset = False
+days_interval = 5  # one information every x days (default=5)
+
+if generate_dataset:        
+    eds = earthdatastore.Auth()
+    items = eds.search("earthdaily-simulated-cloudless-l2a-cog-edagro",
+        bbox=bbox, datetime=[f"{year}-05-15", f"{year}-10-15"], prefer_alternate="download", query=dict(instruments={"contains":"vnir"}))
+    # get only one item every 5 days  (days_interval)
+    items = [items[i] for i in np.arange(0,len(items),days_interval)]
+    datacube_sr = earthdatastore.datacube(
+        items,
+        bbox=bbox,
+        assets={
+            "image_file_B": "blue",
+            "image_file_G": "green",
+            "image_file_Y": "yellow",
+            "image_file_R": "red",
+            "image_file_RE1": "redege1",
+            "image_file_RE2": "redege2",
+            "image_file_RE3": "redege3",
+            "image_file_NIR": "nir",
+        })
+    # if you want to search and create the cube all in one time
+    # datacube_sr = eds.datacube(
+    #     "earthdaily-simulated-cloudless-l2a-cog-edagro",
+    #     bbox=bbox,
+    #     datetime=[f"{year}-05-15", f"{year}-10-15"],
+    #     assets={
+    #         "image_file_B": "blue",
+    #         "image_file_G": "green",
+    #         "image_file_Y": "yellow",
+    #         "image_file_R": "red",
+    #         "image_file_RE1": "redege1",
+    #         "image_file_RE2": "redege2",
+    #         "image_file_RE3": "redege3",
+    #         "image_file_NIR": "nir",
+    #     },
+    #     search_kwargs=dict(query=dict(instruments={"contains":"vnir"})),
+    #     prefer_alternate="download" # to have presigned urls
+    # )
+    # datacube_sr = datacube_sr.isel(time=np.arange(0, datacube_sr.time.size, days_interval))
+
+    for data_var in datacube_sr:
+        data_var_nc = f"data/eds/{year}/{data_var}.nc"
+        if os.path.exists(data_var_nc):
+            continue
+        os.makedirs(f"samples/{year}", exist_ok=True)
+        ds_stats = cube_utils.zonal_stats_numpy(datacube_sr, df)
+        ds_stats.to_netcdf(data_var_nc)
+
+
+# %%
+ds = utils.X_year(year, to_numpy=False, return_feature_index=False)
+for feature_idx in [500,1000,1500,2000]:
+        
+    ds["ndvi"].isel(feature=feature_idx, stats=0).plot()
+    plt.title(utils.y_labels[df.iloc[feature_idx][f'R{str(year)[2:]}']])
+    plt.show()
+
+# %% [markdown]
+# # Generate trainig/testing data
+#
+
+# %%
+# We suppose we have data only up to 15 july.
+end_datetime = "07-15"  # july 15 
+# you can go up to 10-15 (october 15)
+X_18, y_18 = utils.X_y(2018, end_datetime=end_datetime)
+X_19, y_19 = utils.X_y(2019, end_datetime=end_datetime)
+X_20, y_20 = utils.X_y(2020, end_datetime=end_datetime)
+
+# %%
+plt.title("Soy (NDVI)")
+soy = np.in1d(y_19, 1)
+plt.plot(X_19[soy, :][:, np.arange(8, X_19.shape[1], 9)].T, alpha=0.05, c="green")
+plt.show()
+plt.title("Corn (NDVI)")
+corn = np.in1d(y_19, 5)
+plt.plot(X_19[corn, :][:, np.arange(8, X_19.shape[1], 9)].T, alpha=0.05, c="gold")
+plt.show()
+plt.title("Meadow (NDVI)")
+meadow = np.in1d(y_19, 176)
+plt.plot(X_19[meadow, :][:, np.arange(8, X_19.shape[1], 9)].T, alpha=0.2, c="C2")
+plt.show()
+
+
+# %% [markdown]
+# # Machine Learning
+# We use Random Forest and XGBoost to train on one or two years, and to predict on year 2019.
+
+# %%
+from sklearn.ensemble import RandomForestClassifier
+import xgboost as xgb
+
+# %%
+model = RandomForestClassifier()  # default parameters
+
+# %%
+# class are not following number (they are like 1,5,205)... Torch and xgb needs following numbers (0,1,2,3)
+y_18 = utils.y_to_range(y_18)
+y_19 = utils.y_to_range(y_19)
+y_20 = utils.y_to_range(y_20)
+
+# %%
+# # for xgboost, only support class range(0 to n)
+model = xgb.XGBClassifier()  #
+
+
+# %%
+model.fit(X_18, y_18)
+score = model.score(X_19, y_19)
+print(f"Score when training with 2018 : {score}")
+
+# %%
+model.fit(X_20, y_20)
+score = model.score(X_19, y_19)
+print(f"Score when training with 2020 : {score}")
+
+# %%
+model.fit(np.vstack((X_18, X_20)), np.hstack((y_18, y_20)))
+score = model.score(X_19, y_19)
+print(f"Score when training with 2018 and 2020 : {score}")
+
+# %% [markdown]
+# # Deep Learning (RNN) : ELECTS model
+
+
+# %%
+import elects

@@ -1,0 +1,42 @@
+name: bids23
+channels:
+ - conda-forge
+ - defaults
+dependencies:
+ - python=3.11
+ - numpy
+ - gdal==3.7.2
+ - pandas
+ - geopandas
+ - rasterio
+ - scipy
+ - pystac-client
+ - requests
+ - matplotlib
+ - xarray
+ - rioxarray
+ - h5netcdf 
+ - netcdf4
+ - pystac
+ - stackstac
+ - odc-stac
+ - tqdm
+ - joblib
+ - pip
+ - pytorch
+ - seaborn
+ - matplotlib
+ - requests
+ - visdom
+ - tqdm
+ - scikit-learn
+ - jupyter
+ - netCDF4
+ - visdom
+ - torchvision
+ - spyder
+ - xgboost
+ - jupyter
+ - skorch
+ - pip:
+    - earthdaily
