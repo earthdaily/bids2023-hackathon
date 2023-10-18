@@ -1,0 +1,8 @@
+lightning>=2.0
+jsonargparse[signatures]
+jupyterlab
+matplotlib
+rasterio
+albumentations
+torchvision
+torchmetrics>=1.2.0
