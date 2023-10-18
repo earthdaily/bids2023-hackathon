@@ -19,6 +19,7 @@
 from matplotlib import pyplot as plt
 from earthdaily import earthdatastore
 from earthdaily.earthdatastore import cube_utils
+from sklearn import metrics
 import geopandas as gpd
 import numpy as np
 import os
@@ -46,12 +47,17 @@ bbox = df.to_crs(4326).total_bounds.tolist()
 generate_dataset = False
 days_interval = 5  # one information every x days (default=5)
 
-if generate_dataset:        
+if generate_dataset:
     eds = earthdatastore.Auth()
-    items = eds.search("earthdaily-simulated-cloudless-l2a-cog-edagro",
-        bbox=bbox, datetime=[f"{year}-05-15", f"{year}-10-15"], prefer_alternate="download", query=dict(instruments={"contains":"vnir"}))
+    items = eds.search(
+        "earthdaily-simulated-cloudless-l2a-cog-edagro",
+        bbox=bbox,
+        datetime=[f"{year}-05-15", f"{year}-10-15"],
+        prefer_alternate="download",
+        query=dict(instruments={"contains": "vnir"}),
+    )
     # get only one item every 5 days  (days_interval)
-    items = [items[i] for i in np.arange(0,len(items),days_interval)]
+    items = [items[i] for i in np.arange(0, len(items), days_interval)]
     datacube_sr = earthdatastore.datacube(
         items,
         bbox=bbox,
@@ -64,7 +70,8 @@ if generate_dataset:
             "image_file_RE2": "redege2",
             "image_file_RE3": "redege3",
             "image_file_NIR": "nir",
-        })
+        },
+    )
     # if you want to search and create the cube all in one time
     # datacube_sr = eds.datacube(
     #     "earthdaily-simulated-cloudless-l2a-cog-edagro",
@@ -89,17 +96,16 @@ if generate_dataset:
         data_var_nc = f"data/eds/{year}/{data_var}.nc"
         if os.path.exists(data_var_nc):
             continue
-        os.makedirs(f"samples/{year}", exist_ok=True)
+        os.makedirs(f"data/eds/{year}", exist_ok=True)
         ds_stats = cube_utils.zonal_stats_numpy(datacube_sr, df)
         ds_stats.to_netcdf(data_var_nc)
 
 
 # %%
 ds = utils.X_year(year, to_numpy=False, return_feature_index=False)
-for feature_idx in [500,1000,1500,2000]:
-        
+for feature_idx in [500, 1000, 1500, 2000]:
     ds["ndvi"].isel(feature=feature_idx, stats=0).plot()
-    plt.title(utils.y_labels[df.iloc[feature_idx][f'R{str(year)[2:]}']])
+    plt.title(utils.y_labels[df.iloc[feature_idx][f"R{str(year)[2:]}"]])
     plt.show()
 
 # %% [markdown]
@@ -108,7 +114,7 @@ for feature_idx in [500,1000,1500,2000]:
 
 # %%
 # We suppose we have data only up to 15 july.
-end_datetime = "07-15"  # july 15 
+end_datetime = "07-15"  # july 15
 # you can go up to 10-15 (october 15)
 X_18, y_18 = utils.X_y(2018, end_datetime=end_datetime)
 X_19, y_19 = utils.X_y(2019, end_datetime=end_datetime)
@@ -117,15 +123,21 @@ X_20, y_20 = utils.X_y(2020, end_datetime=end_datetime)
 # %%
 plt.title("Soy (NDVI)")
 soy = np.in1d(y_19, 1)
-plt.plot(X_19[soy, :][:, np.arange(8, X_19.shape[1], 9)].T, alpha=0.05, c="green")
+plt.plot(
+    X_19[soy, :][:, np.arange(8, X_19.shape[1], 9)].T, alpha=0.05, c="green"
+)
 plt.show()
 plt.title("Corn (NDVI)")
 corn = np.in1d(y_19, 5)
-plt.plot(X_19[corn, :][:, np.arange(8, X_19.shape[1], 9)].T, alpha=0.05, c="gold")
+plt.plot(
+    X_19[corn, :][:, np.arange(8, X_19.shape[1], 9)].T, alpha=0.05, c="gold"
+)
 plt.show()
 plt.title("Meadow (NDVI)")
 meadow = np.in1d(y_19, 176)
-plt.plot(X_19[meadow, :][:, np.arange(8, X_19.shape[1], 9)].T, alpha=0.2, c="C2")
+plt.plot(
+    X_19[meadow, :][:, np.arange(8, X_19.shape[1], 9)].T, alpha=0.2, c="C2"
+)
 plt.show()
 
 
@@ -150,21 +162,41 @@ y_20 = utils.y_to_range(y_20)
 # # for xgboost, only support class range(0 to n)
 model = xgb.XGBClassifier()  #
 
-
+cm_plot_kwargs = dict(
+    display_labels=list(utils.y_labels.values()),
+    cmap="Blues",
+    xticks_rotation="vertical",
+    colorbar=False,
+)
 # %%
 model.fit(X_18, y_18)
-score = model.score(X_19, y_19)
+y_pred = model.predict(X_19)
+score = metrics.accuracy_score(y_19, y_pred)
 print(f"Score when training with 2018 : {score}")
+y_pred_19 = model.predict(X_19)
+metrics.ConfusionMatrixDisplay.from_predictions(
+    y_19, y_pred, **cm_plot_kwargs
+)
 
 # %%
 model.fit(X_20, y_20)
-score = model.score(X_19, y_19)
+y_pred = model.predict(X_19)
+score = metrics.accuracy_score(y_19, y_pred)
 print(f"Score when training with 2020 : {score}")
+metrics.ConfusionMatrixDisplay.from_predictions(
+    y_19, y_pred, **cm_plot_kwargs
+)
+
 
 # %%
 model.fit(np.vstack((X_18, X_20)), np.hstack((y_18, y_20)))
-score = model.score(X_19, y_19)
+y_pred = model.predict(X_19)
+score = metrics.accuracy_score(y_19, y_pred)
 print(f"Score when training with 2018 and 2020 : {score}")
+metrics.ConfusionMatrixDisplay.from_predictions(
+    y_19, y_pred, **cm_plot_kwargs
+)
+
 
 # %% [markdown]
 # # Deep Learning (RNN) : ELECTS model
@@ -172,3 +204,58 @@ print(f"Score when training with 2018 and 2020 : {score}")
 
 # %%
 import elects
+
+n_bands = 9  # VNIR + NDVI
+
+train_ds = utils.torch_dataset(X_18, y_18, n_bands=n_bands)
+test_ds = utils.torch_dataset(X_19, y_19, n_bands=n_bands)
+
+model = elects.train(
+    train_ds,
+    test_ds,
+    n_classes=len(utils.y_labels),
+    epochs=100,
+    n_bands=n_bands,
+)
+
+y_pred = model.predict(utils.x_to_torch(X_19, n_bands))[2].detach().numpy()
+
+score = metrics.accuracy_score(y_19, y_pred)
+print(f"Score when training with 2018 and 2020 : {score}")
+
+metrics.ConfusionMatrixDisplay.from_predictions(
+    y_19, y_pred, **cm_plot_kwargs
+)
+
+# %% [markdown]
+# # Train with two years
+# %%
+
+# if you want to train a new big dataset with the 2 years
+resume = False
+train_ds = utils.torch_dataset(
+    np.vstack((X_18, X_20)), np.hstack((y_18, y_20)), n_bands=n_bands
+)
+
+# or just add 2020 and resume previous training
+resume = True
+train_ds = utils.torch_dataset(X_20, y_20, n_bands=n_bands)
+
+
+model = elects.train(
+    train_ds,
+    test_ds,
+    n_classes=len(utils.y_labels),
+    epochs=200,  # add 100 epochs
+    n_bands=n_bands,
+    resume=resume,  # in order to start using previous training
+)
+
+y_pred = model.predict(utils.x_to_torch(X_19, n_bands))[2].detach().numpy()
+
+score = metrics.accuracy_score(y_19, y_pred)
+print(f"Score when training with 2018 and 2020 : {score}")
+
+metrics.ConfusionMatrixDisplay.from_predictions(
+    y_19, y_pred, **cm_plot_kwargs
+)

@@ -20,7 +20,14 @@ def parse_args():
         "--dataset",
         type=str,
         default="bavariancrops",
-        choices=["hackathon","bavariancrops", "breizhcrops", "ghana", "southsudan", "unitedstates"],
+        choices=[
+            "hackathon",
+            "bavariancrops",
+            "breizhcrops",
+            "ghana",
+            "southsudan",
+            "unitedstates",
+        ],
         help="dataset",
     )
     parser.add_argument(
@@ -38,9 +45,14 @@ def parse_args():
         "model recover from too early classificaitons (eq 7)",
     )
     parser.add_argument(
-        "--learning-rate", type=float, default=1e-3, help="Optimizer learning rate"
+        "--learning-rate",
+        type=float,
+        default=1e-3,
+        help="Optimizer learning rate",
     )
-    parser.add_argument("--weight-decay", type=float, default=0, help="weight_decay")
+    parser.add_argument(
+        "--weight-decay", type=float, default=0, help="weight_decay"
+    )
     parser.add_argument(
         "--patience", type=int, default=30, help="Early stopping patience"
     )
@@ -64,7 +76,10 @@ def parse_args():
         "if samples are longer, they will be undersampled",
     )
     parser.add_argument(
-        "--batchsize", type=int, default=256, help="number of samples per batch"
+        "--batchsize",
+        type=int,
+        default=256,
+        help="number of samples per batch",
     )
     parser.add_argument(
         "--dataroot",
@@ -98,46 +113,55 @@ def main(args):
         nclasses = 7
         input_dim = 13
         class_weights = None
-        train_ds = BavarianCrops(root=dataroot,partition="train", sequencelength=args.sequencelength)
-        test_ds = BavarianCrops(root=dataroot,partition="valid", sequencelength=args.sequencelength)
+        train_ds = BavarianCrops(
+            root=dataroot,
+            partition="train",
+            sequencelength=args.sequencelength,
+        )
+        test_ds = BavarianCrops(
+            root=dataroot,
+            partition="valid",
+            sequencelength=args.sequencelength,
+        )
 
     elif args.dataset == "hackathon":
         from torch.utils.data import TensorDataset
+
         nclasses = 7
         input_dim = 9
-        
+
         from torch.utils.data import Dataset
-        
+
         X = np.load("C:/Users/nkk/data/clément/X_18.npy").astype(np.float32)
-        X = X.reshape(X.shape[0],int(X.shape[1]/9),-1)
+        X = X.reshape(X.shape[0], int(X.shape[1] / 9), -1)
         y = np.load("C:/Users/nkk/data/clément/y_18.npy")
         # np.repeat(np.newaxis(y,1),X.shape[1],)
-        y = y[:,np.newaxis].repeat(X.shape[1],axis=1)
+        y = y[:, np.newaxis].repeat(X.shape[1], axis=1)
         for idx, i in enumerate(np.unique(y)):
             y[y == i] = idx
 
-        X_tensor = torch.Tensor(X).type(torch.FloatTensor) # transform to torch tensor
+        X_tensor = torch.Tensor(X).type(
+            torch.FloatTensor
+        )  # transform to torch tensor
         y_tensor = torch.Tensor(y).type(torch.LongTensor)
-        train_ds = TensorDataset(X_tensor, y_tensor) # create your datset
-        
-        
-        
+        train_ds = TensorDataset(X_tensor, y_tensor)  # create your datset
+
         X = np.load("C:/Users/nkk/data/clément/X_19.npy").astype(np.float32)
         # X = X.reshape(X.shape[0],int(X.shape[1]/9),-1)
         y = np.load("C:/Users/nkk/data/clément/y_19.npy")
         # np.repeat(np.newaxis(y,1),X.shape[1],)
-        y = y[:,np.newaxis].repeat(X.shape[1],axis=1)
+        y = y[:, np.newaxis].repeat(X.shape[1], axis=1)
         for idx, i in enumerate(np.unique(y)):
             y[y == i] = idx
 
-        X_tensor = torch.Tensor(X).type(torch.FloatTensor) # transform to torch tensor
+        X_tensor = torch.Tensor(X).type(
+            torch.FloatTensor
+        )  # transform to torch tensor
         y_tensor = torch.Tensor(y).type(torch.LongTensor)
-        from torch.utils.data import Dataset
 
-        test_ds = TensorDataset(X_tensor, y_tensor) # create your datset
-        
+        test_ds = TensorDataset(X_tensor, y_tensor)  # create your datset
+
     else:
-        
         raise ValueError(f"dataset {args.dataset} not recognized")
 
     traindataloader = DataLoader(train_ds, batch_size=args.batchsize)
@@ -167,7 +191,9 @@ def main(args):
     criterion = EarlyRewardLoss(alpha=args.alpha, epsilon=args.epsilon)
 
     if args.resume and os.path.exists(args.snapshot):
-        model.load_state_dict(torch.load(args.snapshot, map_location=args.device))
+        model.load_state_dict(
+            torch.load(args.snapshot, map_location=args.device)
+        )
         optimizer_snapshot = os.path.join(
             os.path.dirname(args.snapshot),
             os.path.basename(args.snapshot).replace(".pth", "_optimizer.pth"),
@@ -188,9 +214,15 @@ def main(args):
     with tqdm(range(start_epoch, args.epochs + 1)) as pbar:
         for epoch in pbar:
             trainloss = train_epoch(
-                model, traindataloader, optimizer, criterion, device=args.device
+                model,
+                traindataloader,
+                optimizer,
+                criterion,
+                device=args.device,
             )
-            testloss, stats = test_epoch(model, testdataloader, criterion, args.device)
+            testloss, stats = test_epoch(
+                model, testdataloader, criterion, args.device
+            )
 
             # statistic logging and visualization...
             (
@@ -214,7 +246,9 @@ def main(args):
 
             classification_loss = stats["classification_loss"].mean()
             earliness_reward = stats["earliness_reward"].mean()
-            earliness = 1 - (stats["t_stop"].mean() / (args.sequencelength - 1))
+            earliness = 1 - (
+                stats["t_stop"].mean() / (args.sequencelength - 1)
+            )
 
             stats["confusion_matrix"] = sklearn.metrics.confusion_matrix(
                 y_pred=stats["predictions_at_t_stop"][:, 0],
@@ -246,14 +280,18 @@ def main(args):
             )
             df = pd.DataFrame(train_stats).set_index("epoch")
             visdom_logger.plot_epochs(
-                df[["precision", "recall", "fscore", "kappa"]], name="accuracy metrics"
+                df[["precision", "recall", "fscore", "kappa"]],
+                name="accuracy metrics",
             )
-            visdom_logger.plot_epochs(df[["trainloss", "testloss"]], name="losses")
+            visdom_logger.plot_epochs(
+                df[["trainloss", "testloss"]], name="losses"
+            )
             visdom_logger.plot_epochs(
                 df[["accuracy", "earliness"]], name="accuracy, earliness"
             )
             visdom_logger.plot_epochs(
-                df[["classification_loss", "earliness_reward"]], name="loss components"
+                df[["classification_loss", "earliness_reward"]],
+                name="loss components",
             )
 
             savemsg = ""
@@ -276,9 +314,7 @@ def main(args):
                 else:
                     not_improved += 1  # increment early stopping counter
                     if args.patience is not None:
-                        savemsg = (
-                            f"early stopping in {args.patience - not_improved} epochs."
-                        )
+                        savemsg = f"early stopping in {args.patience - not_improved} epochs."
                     else:
                         savemsg = ""
 
@@ -305,7 +341,9 @@ def train_epoch(model, dataloader, optimizer, criterion, device):
         X, y_true = X.to(device), y_true.to(device)
         log_class_probabilities, probability_stopping = model(X)
 
-        loss = criterion(log_class_probabilities, probability_stopping, y_true)
+        loss = criterion(
+            log_class_probabilities, probability_stopping, y_true
+        )
 
         # assert not loss.isnan().any()
         if not loss.isnan().any():
@@ -333,11 +371,16 @@ def test_epoch(model, dataloader, criterion, device):
             t_stop,
         ) = model.predict(X)
         loss, stat = criterion(
-            log_class_probabilities, probability_stopping, y_true, return_stats=True
+            log_class_probabilities,
+            probability_stopping,
+            y_true,
+            return_stats=True,
         )
 
         stat["loss"] = loss.cpu().detach().numpy()
-        stat["probability_stopping"] = probability_stopping.cpu().detach().numpy()
+        stat["probability_stopping"] = (
+            probability_stopping.cpu().detach().numpy()
+        )
         stat["class_probabilities"] = (
             log_class_probabilities.exp().cpu().detach().numpy()
         )

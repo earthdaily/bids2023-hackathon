@@ -8,6 +8,8 @@ import xarray as xr
 import rioxarray as rxr
 import numpy as np
 import geopandas as gpd
+import torch
+from torch.utils.data import TensorDataset
 
 y_labels = {
     1: "Corn",
@@ -20,14 +22,16 @@ y_labels = {
 }
 
 
-def get_df(year=2018, path='data/CSB'):
+def get_df(year=2018, path="data/CSB"):
     year_two_digits = str(year)[-2:]
     df = gpd.read_file(f"{path}/{year}.gpkg")
     df = df[[f"R{year_two_digits}", "geometry"]].to_crs(3857)
     df.geometry = df.geometry.buffer(-10)
     df = df[df.area > 10000]  # at least 1 hectare
-    
+
     return df
+
+
 def X_year(
     year=2018,
     to_numpy=True,
@@ -53,6 +57,7 @@ def X_year(
         return ds, yidx
     return ds
 
+
 def X_y(year, end_datetime="10-15", to_torch=False, path="data/CSB"):
     X, y_idx = X_year(year, end_datetime=end_datetime)
     if not to_torch:
@@ -66,8 +71,8 @@ def X_y(year, end_datetime="10-15", to_torch=False, path="data/CSB"):
     y = y[selected_features]
     X = X[selected_features, ...]
     if to_torch:
-        to_drop = ~np.sum(np.isnan(X), axis=(1,2), dtype=bool)
-        y = y[:,np.newaxis].repeat(X.shape[1],axis=1)
+        to_drop = ~np.sum(np.isnan(X), axis=(1, 2), dtype=bool)
+        y = y[:, np.newaxis].repeat(X.shape[1], axis=1)
     else:
         to_drop = ~np.sum(np.isnan(X), axis=1, dtype=bool)
 
@@ -75,7 +80,24 @@ def X_y(year, end_datetime="10-15", to_torch=False, path="data/CSB"):
     X = X[to_drop, ...]
     return X, y
 
+
 def y_to_range(y):
-    for idx,y_label in enumerate(list(y_labels.keys())):
-        y = np.where(y==y_label,idx,y)
+    for idx, y_label in enumerate(list(y_labels.keys())):
+        y = np.where(y == y_label, idx, y)
     return y
+
+
+def torch_dataset(X, y, n_bands):
+    if X.ndim == 2:
+        X = X.reshape(X.shape[0], -1, n_bands)
+    X_tensor = torch.Tensor(X).type(
+        torch.FloatTensor
+    )  # transform to torch tensor
+    y = y[:, np.newaxis].repeat(X.shape[1], axis=1)
+    y_tensor = torch.Tensor(y).type(torch.LongTensor)
+    return TensorDataset(X_tensor, y_tensor)
+
+
+def x_to_torch(X, n_bands):
+    X = X.reshape(X.shape[0], -1, n_bands)
+    return torch.Tensor(X).type(torch.FloatTensor)
