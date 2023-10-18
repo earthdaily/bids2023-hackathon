@@ -6,3 +6,4 @@ rasterio
 albumentations
 torchvision
 torchmetrics>=1.2.0
+wandb
