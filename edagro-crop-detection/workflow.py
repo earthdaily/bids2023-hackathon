@@ -18,7 +18,6 @@
 # %%
 from matplotlib import pyplot as plt
 from earthdaily import earthdatastore
-from earthdaily.earthdatastore import cube_utils
 from sklearn import metrics
 import geopandas as gpd
 import numpy as np
@@ -40,8 +39,9 @@ os.environ["PROJ_LIB"] = os.environ["CONDA_PREFIX"] + r"\Library\share\proj"
 
 # %%
 year = 2020
-df = utils.get_df(year)
+df = utils.crops_layer(year)
 bbox = df.to_crs(4326).total_bounds.tolist()
+df.plot(column="R20") # R20 is the crop of the current year
 
 # %%
 generate_dataset = False
@@ -101,6 +101,12 @@ if generate_dataset:
         ds_stats.to_netcdf(data_var_nc)
 
 
+# %% [markdown]
+# ## Plot time series per polygon
+# `X_year` returns the mean values for each polygon and per date.
+#
+# Here we plot polygon from index 500, 1000, 1500 and 2000.
+
 # %%
 ds = utils.X_year(year, to_numpy=False, return_feature_index=False)
 for feature_idx in [500, 1000, 1500, 2000]:
@@ -110,7 +116,7 @@ for feature_idx in [500, 1000, 1500, 2000]:
 
 # %% [markdown]
 # # Generate training/testing data
-#
+# We have data from may 15th to october 15th. But in order to predict the crop during the season, we chose an `end_datetime`, here for the july 15th. 
 
 # %%
 # We suppose we have data only up to 15 july.
@@ -120,6 +126,9 @@ X_18, y_18 = utils.X_y(2018, end_datetime=end_datetime)
 X_19, y_19 = utils.X_y(2019, end_datetime=end_datetime)
 X_20, y_20 = utils.X_y(2020, end_datetime=end_datetime)
 
+# %% [markdown]
+# Here we plot all the NDVI time series for a given year for a specific crop.
+
 # %%
 plt.title("Soy (NDVI)")
 soy = np.in1d(y_19, 1)
@@ -127,12 +136,17 @@ plt.plot(
     X_19[soy, :][:, np.arange(8, X_19.shape[1], 9)].T, alpha=0.05, c="green"
 )
 plt.show()
+
+
+# %%
 plt.title("Corn (NDVI)")
 corn = np.in1d(y_19, 5)
 plt.plot(
     X_19[corn, :][:, np.arange(8, X_19.shape[1], 9)].T, alpha=0.05, c="gold"
 )
 plt.show()
+
+# %%
 plt.title("Meadow (NDVI)")
 meadow = np.in1d(y_19, 176)
 plt.plot(
@@ -140,10 +154,9 @@ plt.plot(
 )
 plt.show()
 
-
 # %% [markdown]
 # # Machine Learning
-# We use Random Forest and XGBoost to train on one or two years, and to predict on year 2019.
+# We use Random Forest and XGBoost to train on one or two years, and to **predict on year 2019**.
 
 # %%
 from sklearn.ensemble import RandomForestClassifier
@@ -151,6 +164,8 @@ import xgboost as xgb
 
 # %%
 model = RandomForestClassifier()  # default parameters
+# or xgb
+# model = xgb.XGBClassifier() 
 
 # %%
 # class are not following number (they are like 1,5,205)... Torch and xgb needs following numbers (0,1,2,3)
@@ -159,9 +174,7 @@ y_19 = utils.y_to_range(y_19)
 y_20 = utils.y_to_range(y_20)
 
 # %%
-# # for xgboost, only support class range(0 to n)
-model = xgb.XGBClassifier()  #
-
+# confusion matrix kwargs
 cm_plot_kwargs = dict(
     display_labels=list(utils.y_labels.values()),
     cmap="Blues",
@@ -189,7 +202,7 @@ metrics.ConfusionMatrixDisplay.from_predictions(
 
 
 # %%
-model.fit(np.vstack((X_18, X_20)), np.hstack((y_18, y_20)))
+model.fit( np.vstack((X_18, X_20)), np.hstack((y_18, y_20)) )
 y_pred = model.predict(X_19)
 score = metrics.accuracy_score(y_19, y_pred)
 print(f"Score when training with 2018 and 2020 : {score}")
@@ -204,9 +217,10 @@ metrics.ConfusionMatrixDisplay.from_predictions(
 
 # %%
 import elects
-
+# We must define the number of bands
 n_bands = 9  # VNIR + NDVI
 
+# %%
 train_ds = utils.torch_dataset(X_18, y_18, n_bands=n_bands)
 test_ds = utils.torch_dataset(X_19, y_19, n_bands=n_bands)
 
@@ -218,20 +232,19 @@ model = elects.train(
     n_bands=n_bands,
 )
 
+# %%
 y_pred = model.predict(utils.x_to_torch(X_19, n_bands))[2].detach().numpy()
 
 score = metrics.accuracy_score(y_19, y_pred)
 print(f"Score when training with 2018 and 2020 : {score}")
 
-metrics.ConfusionMatrixDisplay.from_predictions(
-    y_19, y_pred, **cm_plot_kwargs
-)
+metrics.ConfusionMatrixDisplay.from_predictions(y_19, y_pred, **cm_plot_kwargs)
 
 # %% [markdown]
 # # Train with two years
+#
+# We want to train using 2 years in order to predict year 2019. We have two solutions, to resume from the previous model the training and just train with 2020, or to train a new model using 2018 and 2020 years at once.
 # %%
-
-# if you want to train a new big dataset with the 2 years
 resume = False
 train_ds = utils.torch_dataset(
     np.vstack((X_18, X_20)), np.hstack((y_18, y_20)), n_bands=n_bands
@@ -240,7 +253,6 @@ train_ds = utils.torch_dataset(
 # or just add 2020 and resume previous training
 resume = True
 train_ds = utils.torch_dataset(X_20, y_20, n_bands=n_bands)
-
 
 model = elects.train(
     train_ds,

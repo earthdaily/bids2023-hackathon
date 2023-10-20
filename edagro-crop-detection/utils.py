@@ -22,7 +22,7 @@ y_labels = {
 }
 
 
-def get_df(year=2018, path="data/CSB"):
+def crops_layer(year: int = 2018, path="data/CSB"):
     year_two_digits = str(year)[-2:]
     df = gpd.read_file(f"{path}/{year}.gpkg")
     df = df[[f"R{year_two_digits}", "geometry"]].to_crs(3857)
@@ -83,7 +83,7 @@ def X_y(year, end_datetime="10-15", to_torch=False, path="data/CSB"):
 
 def y_to_range(y):
     # if already range, return same
-    if np.array_equal(u := np.unique(y),np.arange(u.size)):
+    if np.array_equal(u := np.unique(y), np.arange(u.size)):
         return y
     for idx, y_label in enumerate(list(y_labels.keys())):
         y = np.where(y == y_label, idx, y)
