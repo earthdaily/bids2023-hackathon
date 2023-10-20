@@ -82,6 +82,9 @@ def X_y(year, end_datetime="10-15", to_torch=False, path="data/CSB"):
 
 
 def y_to_range(y):
+    # if already range, return same
+    if np.array_equal(u := np.unique(y),np.arange(u.size)):
+        return y
     for idx, y_label in enumerate(list(y_labels.keys())):
         y = np.where(y == y_label, idx, y)
     return y
