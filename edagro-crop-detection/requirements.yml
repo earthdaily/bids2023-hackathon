@@ -6,6 +6,7 @@ dependencies:
  - python=3.11
  - numpy
  - gdal==3.7.2
+ - pyproj
  - pandas
  - geopandas
  - rasterio
@@ -15,7 +16,6 @@ dependencies:
  - matplotlib
  - xarray
  - rioxarray
- - h5netcdf 
  - netcdf4
  - pystac
  - stackstac
@@ -37,6 +37,6 @@ dependencies:
  - spyder
  - xgboost
  - jupyter
- - skorch
+ - contextily
  - pip:
     - earthdaily

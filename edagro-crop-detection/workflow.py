@@ -15,33 +15,69 @@
 #     name: python3
 # ---
 
-# %%
-from matplotlib import pyplot as plt
-from earthdaily import earthdatastore
-from sklearn import metrics
-import geopandas as gpd
-import numpy as np
-import os
-import tqdm
-import xarray as xr
-import utils
+# %% [markdown]
+# # 🛰️🌿Predict crops using EarthDaily simulated constellation
+#
+# The idea of this hackathon  is to use the **EarthDaily Simulated dataset** to predict the 2019 crops in the current season (as if we were july 15th).
+# The dataset was pregenerated using the earthdaily python package and the code is available in this notebook.
+#
+# We have three different years (2018, 2019 and 2020) and our workflow train from a specific year (2018 or 2020) only on spectral bands to predict an independent year (2019). We challenge you to have the maximum accuracy to **predict year 2019** by having only **data up to july 1st** (so a month and a half of data, from may 15th to july 1st).
+#
+# ## Install the conda/mamba environnement
+#
+# Download mamba : https://github.com/conda-forge/miniforge#mambaforge.
+#
+# If you're using powershell copy/paste this to have mamba commands : ```powershell -ExecutionPolicy ByPass -NoExit -Command "& 'C:\Users\$Env:UserName\AppData\Local\mambaforge\condabin\mamba.bat' init powershell"```
+#
+# Then using setup the bids23 environment : `mamba env update --name bids23 --file requirements.yml`.
+#
+# To run the notebook : `mamba activate bids23` and `jupyter notebook`.
 
 # %%
+# To run if you have some gdal missing GDAL_DATA warning
 os.environ["GDAL_DATA"] = os.environ["CONDA_PREFIX"] + r"\Library\share\gdal"
 os.environ["PROJ_LIB"] = os.environ["CONDA_PREFIX"] + r"\Library\share\proj"
+
+# %%
+from matplotlib import pyplot as plt
+from earthdaily import earthdatastore # if you consider to generate the dataset, warning it takes about 1 or 2 hours.
+from sklearn import metrics
+import numpy as np
+import os
+import xarray as xr
+import rioxarray as rxr
+import pandas as pd
+import geopandas as gpd
+import utils  # specific codes for this hackathon
 
 # %% [markdown]
 # ## Generate dataset from the earthdaily simulation
 #
-# The earthdaily simulated dataset is a simulation using various Sensors (Venus, Sentinel-2, Landsat, Modis) in order to have a cloudless version of what will be available when the EarthDaily constellation will be here. 5m spatial resolution on VNIR bands, daily revisit, radiometric scientific grade quality...
+# The **EarthDaily Simulated dataset** is a simulation using various Sensors (Venus, Sentinel-2, Landsat, Modis) in order to have a cloudless version of what we will be able to generate when **EarthDaily constellation** will be here : 5m spatial resolution on most of VNIR bands, daily revisit, radiometric scientific grade quality...
 # As it is cloudless, it is an Analytics Ready Product.
 
 
 # %%
+# To generate the dataset for a specific year
 year = 2020
 df = utils.crops_layer(year)
 bbox = df.to_crs(4326).total_bounds.tolist()
-df.plot(column="R20") # R20 is the crop of the current year
+# Add crops names to the dataframe
+crops_df = pd.DataFrame(
+    list(utils.y_labels.values()),
+    list(utils.y_labels.keys()),
+    columns=["crop"],
+)
+df = df.merge(crops_df, how="left", left_on="R20", right_index=True)
+
+# %% [markdown]
+# Explore this year
+
+# %%
+df.explore(column="crop", popup=True, tiles="CartoDB positron", cmap="Set1")
+
+# %% [markdown]
+# Generate the training data of this year
 
 # %%
 generate_dataset = False
@@ -72,32 +108,15 @@ if generate_dataset:
             "image_file_NIR": "nir",
         },
     )
-    # if you want to search and create the cube all in one time
-    # datacube_sr = eds.datacube(
-    #     "earthdaily-simulated-cloudless-l2a-cog-edagro",
-    #     bbox=bbox,
-    #     datetime=[f"{year}-05-15", f"{year}-10-15"],
-    #     assets={
-    #         "image_file_B": "blue",
-    #         "image_file_G": "green",
-    #         "image_file_Y": "yellow",
-    #         "image_file_R": "red",
-    #         "image_file_RE1": "redege1",
-    #         "image_file_RE2": "redege2",
-    #         "image_file_RE3": "redege3",
-    #         "image_file_NIR": "nir",
-    #     },
-    #     search_kwargs=dict(query=dict(instruments={"contains":"vnir"})),
-    #     prefer_alternate="download" # to have presigned urls
-    # )
-    # datacube_sr = datacube_sr.isel(time=np.arange(0, datacube_sr.time.size, days_interval))
 
     for data_var in datacube_sr:
         data_var_nc = f"data/eds/{year}/{data_var}.nc"
         if os.path.exists(data_var_nc):
             continue
         os.makedirs(f"data/eds/{year}", exist_ok=True)
-        ds_stats = cube_utils.zonal_stats_numpy(datacube_sr, df)
+        ds_stats = earthdatastore.cube_utils.zonal_stats_numpy(
+            datacube_sr, df
+        )
         ds_stats.to_netcdf(data_var_nc)
 
 
@@ -116,12 +135,12 @@ for feature_idx in [500, 1000, 1500, 2000]:
 
 # %% [markdown]
 # # Generate training/testing data
-# We have data from may 15th to october 15th. But in order to predict the crop during the season, we chose an `end_datetime`, here for the july 15th. 
+# We have data from **may 15th to october 15th**. But in order to predict the crop during the season, we chose an `end_datetime`, here for the **july 1st**.
 
 # %%
-# We suppose we have data only up to 15 july.
-end_datetime = "07-15"  # july 15
-# you can go up to 10-15 (october 15)
+# We suppose we have data only up to july 1st.
+end_datetime = "07-01"  # july 15th
+# you can go up to 10-15 (october 15th)
 X_18, y_18 = utils.X_y(2018, end_datetime=end_datetime)
 X_19, y_19 = utils.X_y(2019, end_datetime=end_datetime)
 X_20, y_20 = utils.X_y(2020, end_datetime=end_datetime)
@@ -156,16 +175,20 @@ plt.show()
 
 # %% [markdown]
 # # Machine Learning
-# We use Random Forest and XGBoost to train on one or two years, and to **predict on year 2019**.
+# We use Random Forest and XGBoost to train with one or two years, and to **predict on year 2019**.
 
 # %%
 from sklearn.ensemble import RandomForestClassifier
-import xgboost as xgb
+
+model = RandomForestClassifier()  # default parameters
+
+# %% [markdown]
+# Or use xgboost
 
 # %%
-model = RandomForestClassifier()  # default parameters
-# or xgb
-# model = xgb.XGBClassifier() 
+import xgboost as xgb
+
+model = xgb.XGBClassifier()
 
 # %%
 # class are not following number (they are like 1,5,205)... Torch and xgb needs following numbers (0,1,2,3)
@@ -202,7 +225,7 @@ metrics.ConfusionMatrixDisplay.from_predictions(
 
 
 # %%
-model.fit( np.vstack((X_18, X_20)), np.hstack((y_18, y_20)) )
+model.fit(np.vstack((X_18, X_20)), np.hstack((y_18, y_20)))
 y_pred = model.predict(X_19)
 score = metrics.accuracy_score(y_19, y_pred)
 print(f"Score when training with 2018 and 2020 : {score}")
@@ -213,12 +236,16 @@ metrics.ConfusionMatrixDisplay.from_predictions(
 
 # %% [markdown]
 # # Deep Learning (RNN) : ELECTS model
+# ELECTS is a RNN algorithm which stands for : End-to-End Learned Early Classification of Time Series for In-Season Crop Type Mapping.
+#
+# Here's the [github page](https://github.com/MarcCoru/elects/)
 
 
 # %%
 import elects
+
 # We must define the number of bands
-n_bands = 9  # VNIR + NDVI
+n_bands = 9  # 8 VNIR + NDVI
 
 # %%
 train_ds = utils.torch_dataset(X_18, y_18, n_bands=n_bands)
@@ -236,23 +263,26 @@ model = elects.train(
 y_pred = model.predict(utils.x_to_torch(X_19, n_bands))[2].detach().numpy()
 
 score = metrics.accuracy_score(y_19, y_pred)
-print(f"Score when training with 2018 and 2020 : {score}")
+print(f"Score when training with 2018 : {score}")
 
-metrics.ConfusionMatrixDisplay.from_predictions(y_19, y_pred, **cm_plot_kwargs)
+metrics.ConfusionMatrixDisplay.from_predictions(
+    y_19, y_pred, **cm_plot_kwargs
+)
 
 # %% [markdown]
 # # Train with two years
 #
 # We want to train using 2 years in order to predict year 2019. We have two solutions, to resume from the previous model the training and just train with 2020, or to train a new model using 2018 and 2020 years at once.
 # %%
-resume = False
-train_ds = utils.torch_dataset(
-    np.vstack((X_18, X_20)), np.hstack((y_18, y_20)), n_bands=n_bands
-)
-
-# or just add 2020 and resume previous training
 resume = True
-train_ds = utils.torch_dataset(X_20, y_20, n_bands=n_bands)
+# if resume, just add 2020 and use previous trained model
+if resume:
+    train_ds = utils.torch_dataset(X_20, y_20, n_bands=n_bands)
+else:
+    train_ds = utils.torch_dataset(
+        np.vstack((X_18, X_20)), np.hstack((y_18, y_20)), n_bands=n_bands
+    )
+
 
 model = elects.train(
     train_ds,
