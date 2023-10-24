@@ -71,7 +71,7 @@ crops_df = pd.DataFrame(
 df = df.merge(crops_df, how="left", left_on="R20", right_index=True)
 
 # %% [markdown]
-# Explore this year
+# Explore the dataset for this year
 
 # %%
 df.explore(column="crop", popup=True, tiles="CartoDB positron", cmap="Set1")
