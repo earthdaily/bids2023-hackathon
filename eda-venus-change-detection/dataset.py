@@ -24,6 +24,10 @@ nodestructive_pipe = A.OneOf(
         A.VerticalFlip(p=0.5),
         A.RandomRotate90(p=0.5),
         A.Transpose(p=0.5),
+        # Experimental augmentations below
+        # A.ShiftScaleRotate(shift_limit=0.1, scale_limit=0.1, rotate_limit=15, p=0.5), # Mild perturbations to position and orientation
+        # A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.5),
+        # A.ElasticTransform(alpha=1, sigma=50, alpha_affine=50, p=0.5) #  Simulates small deformations in the image
     ],
     p=1,
 )
@@ -35,6 +39,11 @@ weak_augmentation = A.Compose(
         albumentations.pytorch.transforms.ToTensorV2(),
     ]
 )
+
+# imagenet normalisation
+mean = [0.485, 0.456, 0.406]
+std = [0.229, 0.224, 0.225]
+normalize = A.Normalize(mean=mean, std=std, p=1)
 
 
 class VCDDataset(Dataset):
@@ -114,6 +123,10 @@ class VCDDataset(Dataset):
         after_image = self.read_and_preprocess_image(after_path)
         mask = self.read_and_preprocess_image(mask_path)
 
+        # Normalisation did not improve result
+        # before_image = normalize(image=before_image)["image"] # normalise the RGB only
+        # after_image = normalize(image=after_image)["image"] # normalise the RGB only
+
         # before_image and after_image are HxWxC numpy arrays
         image = np.concatenate([before_image, after_image], axis=2)
 
@@ -121,14 +134,14 @@ class VCDDataset(Dataset):
         data = {"image": image, "mask": mask}
         augmented = self.augmentation(**data)  # returns tensors
         image, mask = augmented["image"], augmented["mask"]
+
         image1 = image[: self.nbands, :, :]
         image2 = image[self.nbands :, :, :]
-        mask = mask.to(dtype=torch.long)  # Explicitly cast to torch.long
         mask = mask.unsqueeze(0)  # add a channel dimension
         return {
-            "image1": image1,
-            "image2": image2,
-            "mask": mask,
+            "image1": image1.float(),
+            "image2": image2.float(),
+            "mask": mask.float(),
             "img_id": self.valid_subfolders[idx].name,
         }
 
