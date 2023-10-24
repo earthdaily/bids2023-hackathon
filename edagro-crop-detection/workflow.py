@@ -35,6 +35,7 @@
 
 # %%
 # To run if you have some gdal missing GDAL_DATA warning
+import os
 os.environ["GDAL_DATA"] = os.environ["CONDA_PREFIX"] + r"\Library\share\gdal"
 os.environ["PROJ_LIB"] = os.environ["CONDA_PREFIX"] + r"\Library\share\proj"
 
@@ -43,7 +44,6 @@ from matplotlib import pyplot as plt
 from earthdaily import earthdatastore # if you consider to generate the dataset, warning it takes about 1 or 2 hours.
 from sklearn import metrics
 import numpy as np
-import os
 import xarray as xr
 import rioxarray as rxr
 import pandas as pd
@@ -77,7 +77,7 @@ df = df.merge(crops_df, how="left", left_on="R20", right_index=True)
 df.explore(column="crop", popup=True, tiles="CartoDB positron", cmap="Set1")
 
 # %% [markdown]
-# Generate the training data of this year
+# Generate the training data of this year (warning it takes about 2 hours)
 
 # %%
 generate_dataset = False

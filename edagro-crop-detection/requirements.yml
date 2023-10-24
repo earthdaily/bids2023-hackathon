@@ -18,10 +18,11 @@ dependencies:
  - rioxarray
  - netcdf4
  - pystac
- - stackstac
  - odc-stac
  - tqdm
  - joblib
+ - folium
+ - mapclassify
  - pip
  - pytorch
  - seaborn
@@ -32,11 +33,8 @@ dependencies:
  - scikit-learn
  - jupyter
  - netCDF4
- - visdom
  - torchvision
- - spyder
  - xgboost
  - jupyter
- - contextily
  - pip:
     - earthdaily
