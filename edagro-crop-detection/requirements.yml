@@ -16,6 +16,7 @@ dependencies:
  - xarray
  - rioxarray
  - tqdm
+ - jupyter
  - folium
  - mapclassify
  - pip
