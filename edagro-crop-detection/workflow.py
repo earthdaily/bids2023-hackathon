@@ -314,20 +314,16 @@ metrics.ConfusionMatrixDisplay.from_predictions(
 print(f"My 2018 dataset has shape of {X_18.shape}")
 n_bands = 9
 n_dates = X_18.shape[1]/n_bands
-# 7634 rows and 90 features, as we have 9 bands per date, it means we have 10 dates and 9 features per date
 
+# %%
 # Now we can add for each date a new feature
-X_18_enhanced = utils.add_features_on_X(
-    X_18, features=np.random.randint(0,100,10), n_dates=10
-) # here we add random values from 0 to 100
-print(X_18_enhanced.shape)
+X_18_enhanced = utils.add_features_on_X(X_18, features=np.random.randint(0,100,10), n_dates=10) # here we add random values from 0 to 100
 print(
-    f"my new feature for the first date of the first sample is : {X_18_enhanced[0,9]}"
+    f"My new feature for the first date of the first sample is : {X_18_enhanced[0,9]}"
 )
 
+# %%
 # And you can add as many features as you want, they just need to have the same length as the number of dates
-X_18_enhanced = utils.add_features_on_X(
-    X_18_enhanced, features=np.random.randint(0,100,10), n_dates=10
-)
+X_18_enhanced = utils.add_features_on_X(X_18_enhanced, features=np.random.randint(0,100,10), n_dates=10)
 
 print(f"X_18_enhanced has now {X_18_enhanced.shape[1]/10} features per date")
