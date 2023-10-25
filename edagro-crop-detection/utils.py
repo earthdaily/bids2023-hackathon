@@ -106,7 +106,7 @@ def x_to_torch(X, n_bands):
     return torch.Tensor(X).type(torch.FloatTensor)
 
 
-def add_features_on_X(X, features, n_dates):
+def add_features_on_X(X:np.ndarray, features:np.ndarray, n_dates:int) -> np.ndarray:
     n_bands = int(X.shape[1] / n_dates)
     if features.size != n_dates:
         raise ValueError(
