@@ -36,12 +36,16 @@
 # %%
 # To run if you have some gdal missing GDAL_DATA warning
 import os
-os.environ["GDAL_DATA"] = os.environ["CONDA_PREFIX"] + r"\Library\share\gdal"
-os.environ["PROJ_LIB"] = os.environ["CONDA_PREFIX"] + r"\Library\share\proj"
+if os.path.exists("/teamspace/studios/this_studio/eda-bids-hackathon-prep/"):
+    os.chdir(
+        "/teamspace/studios/this_studio/eda-bids-hackathon-prep/edagro-crop-detection"
+    )
+# os.environ["GDAL_DATA"] = os.environ["CONDA_PREFIX"] + r"\Library\share\gdal"
+# os.environ["PROJ_LIB"] = os.environ["CONDA_PREFIX"] + r"\Library\share\proj"
 
 # %%
 from matplotlib import pyplot as plt
-from earthdaily import earthdatastore # if you consider to generate the dataset, warning it takes about 1 or 2 hours.
+# from earthdaily import earthdatastore  # if you consider to generate the dataset, warning it takes about 1 or 2 hours.
 from sklearn import metrics
 import numpy as np
 import xarray as xr
@@ -301,3 +305,29 @@ print(f"Score when training with 2018 and 2020 : {score}")
 metrics.ConfusionMatrixDisplay.from_predictions(
     y_19, y_pred, **cm_plot_kwargs
 )
+
+# %% [markdown]
+# # Add new features to your samples
+#
+# Let's suppose you find some weather information and you want to learn also with these informations.
+# %%
+print(f"My 2018 dataset has shape of {X_18.shape}")
+n_bands = 9
+n_dates = X_18.shape[1]/n_bands
+# 7634 rows and 90 features, as we have 9 bands per date, it means we have 10 dates and 9 features per date
+
+# Now we can add for each date a new feature
+X_18_enhanced = utils.add_features_on_X(
+    X_18, features=np.random.randint(0,100,10), n_dates=10
+) # here we add random values from 0 to 100
+print(X_18_enhanced.shape)
+print(
+    f"my new feature for the first date of the first sample is : {X_18_enhanced[0,9]}"
+)
+
+# And you can add as many features as you want, they just need to have the same length as the number of dates
+X_18_enhanced = utils.add_features_on_X(
+    X_18_enhanced, features=np.random.randint(0,100,10), n_dates=10
+)
+
+print(f"X_18_enhanced has now {X_18_enhanced.shape[1]/10} features per date")
