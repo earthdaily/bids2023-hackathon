@@ -47,7 +47,9 @@ if os.path.exists("/teamspace/studios/this_studio/eda-bids-hackathon-prep/"):
 # %%
 from matplotlib import pyplot as plt
 
-# from earthdaily import earthdatastore  # if you consider to generate the dataset, warning it takes about 1 or 2 hours.
+from earthdaily import (
+    earthdatastore,
+)  # if you consider to generate the dataset, warning it takes about 1 or 2 hours.
 from sklearn import metrics
 import numpy as np
 import xarray as xr
