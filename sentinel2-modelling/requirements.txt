@@ -1,0 +1,2 @@
+wandb
+git+https://github.com/microsoft/torchgeo.git
