@@ -16,4 +16,4 @@ To run the notebook : `mamba activate bids23` and `jupyter notebook`.
 
 ## Try it !
 
-Now you can edit and try `workflow.ipynb`. Remember, the higher accuracy you have to predict 2019 with training on 2018 and 2020, the better it is :).
+Now you can edit and try `workflow.ipynb`. Remember, the highest accuracy you can have to predict 2019 with training on 2018 and 2020, the better it is :).
