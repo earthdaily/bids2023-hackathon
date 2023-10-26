@@ -12,31 +12,22 @@ dependencies:
  - rasterio
  - scipy
  - pystac-client
- - requests
  - matplotlib
  - xarray
  - rioxarray
- - netcdf4
- - pystac
- - stackstac
- - odc-stac
  - tqdm
- - joblib
+ - jupyter
+ - folium
+ - mapclassify
  - pip
  - pytorch
  - seaborn
  - matplotlib
  - requests
- - visdom
  - tqdm
  - scikit-learn
- - jupyter
  - netCDF4
- - visdom
  - torchvision
- - spyder
  - xgboost
- - jupyter
- - contextily
  - pip:
     - earthdaily

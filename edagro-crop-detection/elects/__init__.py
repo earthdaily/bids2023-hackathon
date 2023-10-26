@@ -4,7 +4,6 @@ import torch
 from tqdm import tqdm
 from .loss import EarlyRewardLoss
 import numpy as np
-from .utils import VisdomLogger
 import sklearn.metrics
 import pandas as pd
 import os
@@ -72,6 +71,7 @@ def train(
         start_epoch = 1
 
     if use_visdom:
+        from .utils import VisdomLogger
         visdom_logger = VisdomLogger()
 
     not_improved = 0

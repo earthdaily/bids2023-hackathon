@@ -104,3 +104,24 @@ def torch_dataset(X, y, n_bands):
 def x_to_torch(X, n_bands):
     X = X.reshape(X.shape[0], -1, n_bands)
     return torch.Tensor(X).type(torch.FloatTensor)
+
+
+def add_features_on_X(X:np.ndarray, features:np.ndarray, n_dates:int) -> np.ndarray:
+    n_bands = int(X.shape[1] / n_dates)
+    if features.size != n_dates:
+        raise ValueError(
+            f"Features must have same length as the number of dates : {n_dates}."
+        )
+    if features.ndim == 1:  # in order to have one feature per X
+        features = np.repeat(features.reshape(-1, 1), X.shape[0], 1).T
+
+    new_X = np.zeros((X.shape[0], X.shape[1] + n_dates), dtype=X.dtype)
+    for date in range(n_dates):
+        source = X[:, date + (n_bands * date) : date + (n_bands * (date + 1))]
+        new_X[
+            :,
+            date
+            + ((n_bands + 1) * date) : date
+            + ((n_bands + 1) * (date + 1)),
+        ] = np.hstack((source, features[:, date].reshape(-1, 1)))
+    return new_X
