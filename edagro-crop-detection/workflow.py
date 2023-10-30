@@ -367,12 +367,14 @@ X_18_enhanced = utils.add_features_on_X(
 
 print(f"X_18_enhanced has now {X_18_enhanced.shape[1]/10} features per date")
 
-# %%
+# %% [markdown]
 # ## Add Sentinel-1 features per each sample
 #
 # /!\ As ELECTS (Deep Learning part) requires a new feature at every time dimension, this approach will be mainly suitable only for the Machine Learning.
-# 
+#  
+#
 
+# %%
 eds = earthdatastore.Auth()
 
 year = 2018
