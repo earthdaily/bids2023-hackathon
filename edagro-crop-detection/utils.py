@@ -58,15 +58,12 @@ def X_year(
     return ds
 
 
-def X_y(year, end_datetime="10-15", to_torch=False, path="data/CSB"):
+def X_y(year, end_datetime="10-15", to_torch=False, path="data/CSB", return_indices=True):
     X, y_idx = X_year(year, end_datetime=end_datetime)
     if not to_torch:
         X = X.reshape(X.shape[0], -1)
-    y = (
-        gpd.read_file(f"{path}/{year}.gpkg")[f"R{str(year)[-2:]}"]
-        .loc[y_idx]
-        .to_numpy()
-    )
+    y = gpd.read_file(f"{path}/{year}.gpkg")[f"R{str(year)[-2:]}"].loc[y_idx]
+    
     selected_features = np.in1d(y, list(y_labels.keys()))
     y = y[selected_features]
     X = X[selected_features, ...]
@@ -78,7 +75,9 @@ def X_y(year, end_datetime="10-15", to_torch=False, path="data/CSB"):
 
     y = y[to_drop]
     X = X[to_drop, ...]
-    return X, y
+    if return_indices:
+        return X, y.to_numpy(), y.index.tolist()
+    return X,y
 
 
 def y_to_range(y):
