@@ -18,7 +18,6 @@ class Renderer:
     }
 
     def __init__(self, array):
-
         self.array = np.atleast_3d(array)
         height, width, channels = self.array.shape
 

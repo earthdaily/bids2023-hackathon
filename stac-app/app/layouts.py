@@ -79,9 +79,7 @@ def get_main_page() -> html.Div:
                     dbc.Card(
                         dbc.CardBody(
                             [
-                                html.H5(
-                                    "Baseline Date", style={"font-weight": "bold"}
-                                ),
+                                html.H5("Baseline Date", style={"font-weight": "bold"}),
                                 dcc.Dropdown(id="date-selector-baseline", options=[]),
                             ]
                         )
@@ -89,7 +87,9 @@ def get_main_page() -> html.Div:
                     dbc.Card(
                         dbc.CardBody(
                             [
-                                html.H5("Comparison Date", style={"font-weight": "bold"}),
+                                html.H5(
+                                    "Comparison Date", style={"font-weight": "bold"}
+                                ),
                                 dcc.Dropdown(id="date-selector-comparison", options=[]),
                                 html.Br(),
                                 dbc.Spinner(html.Div(id="loading-color")),

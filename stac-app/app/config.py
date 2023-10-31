@@ -11,8 +11,4 @@ static_asset_path = "/app/assets/"
 osm_url = "https://tile.openstreetmap.org/${z}/${x}/${y}.png"
 topo_url = "http://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
 
-bounds = [
-    [55.51125779504265, -122.520837809177],
-    [55.54782472683954, -122.4565261844684],
-]
 init_bounds = [[48.78, -123.755], [49.7611, -122.5]]
