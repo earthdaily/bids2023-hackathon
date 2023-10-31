@@ -4,3 +4,11 @@
 
  ### venus-denver-with-building-model.ipynb
  This notebook demonstrates querying the STAC API for a Venus chip using an ROI, saving RGB PNG and multispectral Geotiffs, and then using this imagery to train a simple (not deep) model for building/not-building pixel level prediction.
+
+ ### STAC-App
+ This demonstration app enables users to make skyfox queries and render data within an AOI for two dates to enable quick comparison. If time permits, it may grow to include unsupervised segmentation capabilities. To run this app, run the following:
+ ```
+ cd stac-app
+ ./run_app.sh
+ ```
+ Note: credentials for Skyfox access are not yet tested for external users. 
