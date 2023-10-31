@@ -121,6 +121,7 @@ def get_stac_items(geom, start_date, end_date) -> xr.Dataset:
     clean_ind = ~pd.Index(data.time).duplicated(keep="first")
     data = data.sel({"time": clean_ind})
 
+    """
     NODATA = 0
     MASK_BAND_NAME = "SCL"
 
@@ -135,6 +136,7 @@ def get_stac_items(geom, start_date, end_date) -> xr.Dataset:
 
     data = data.where(mask_values.squeeze() == 0)
     app.logger.info(data.time)
+    """
     temporally_agg_data_array = data.groupby('time.date').min()
     app.logger.info(temporally_agg_data_array.date)
 

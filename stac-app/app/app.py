@@ -10,6 +10,7 @@ from dash_extensions.enrich import (
     dcc,
     html,
 )
+from dask.distributed import Client, LocalCluster  # noqa
 
 from app import config, services
 from app.layouts import get_main_page
@@ -32,6 +33,8 @@ app = DashProxy(
     ],
 )
 
+log.info("Using local cluster.")
+client = Client(processes=False)
 server = app.server
 
 app.layout = html.Div(
