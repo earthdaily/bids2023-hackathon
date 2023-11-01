@@ -45,6 +45,9 @@ Each notebook has specific environment requirements. To create Mamba environment
 
 The notebook can then be run: `mamba activate bids23` and `jupyter notebook`.
 
+## STAC-App
+The `stac-app` can only be run locally. To run the `stac-app`, clone the repo to your machine and follow the instructions in `stac-app/README.md`.
+
 
 ## EDS Credentials Setup 
 If you are participating in the BiDS 2023 Hackathon, you should have received credentials to access the EDS. Make a copy of `.env.sample` to `.env` and fill in the credentials and access information as provided. 

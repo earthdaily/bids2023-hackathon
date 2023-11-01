@@ -68,3 +68,4 @@ edagro-crop-detection/snapshots/
 *.tif
 sentinel2-modelling/data/*
 *.ckpt
+stac-app/.vscode/*
