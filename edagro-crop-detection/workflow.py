@@ -19,7 +19,7 @@
 # # 🛰️🌿Predict crops using EarthDaily simulated constellation
 #
 # The idea of this hackathon  is to use the **EarthDaily Simulated dataset** to predict the 2019 crops in the current season (as if we were july 1st).
-# The dataset was pregenerated using the earthdaily python package and the code is available in this notebook.
+# The dataset was pregenerated using the earthdaily python package (with relies on the EarthData Store) and the code is available in this notebook.
 #
 # We have three different years (2018, 2019 and 2020) and our workflow train from a specific year (2018 or 2020) only on spectral bands to predict an independent year (2019 being Nebraska's wettest summer). We challenge you to have the maximum accuracy to **predict year 2019** by having only **data up to july 1st** (so a month and a half of data, from may 15th to july 1st).
 #
@@ -64,10 +64,10 @@ import geopandas as gpd
 import utils  # specific codes for this hackathon
 
 # %% [markdown]
-# ## Generate dataset from the earthdaily simulation
+# ## Generate dataset from the EarthDaily Simulation
 #
 # The **EarthDaily Simulated dataset** is a simulation using various Sensors (Venus, Sentinel-2, Landsat, Modis) in order to have a cloudless version of what we will be able to generate when **EarthDaily constellation** will be here : 5m spatial resolution on most of VNIR bands, daily revisit, radiometric scientific grade quality...
-# As it is cloudless, it is an Analytics Ready Product.
+# As it is cloudless, it is an Analytics Ready Product. There can be some artefacts (like some noise patterns at some dates where few data were available)  or in urban areas (this dataset is best suitable for the agriculture).
 #
 # ### Ground truth
 # The crops dataset (polygon and label) for each year is the extent extract from the [Crop Sequence Boundaries](https://www.nass.usda.gov/Research_and_Science/Crop-Sequence-Boundaries/index.php) (CSB). You can got this data directly via `utils.crops_layer(2020)` for year 2020.
@@ -94,7 +94,7 @@ df.explore(column="crop", popup=True, tiles="CartoDB positron", cmap="Set1")
 
 # %% [markdown]
 # Here we generate the training data of the year defined earlier (warning it takes around 30 minutes per year).
-#
+# The earthdaily python package relies on the EarthData Store.
 # As it takes about 2 hours to generate the dataset (for the 3 years), **you provide you a pregenerated dataset for the Hackathon**. But this code has been used to generated the data you'll have.
 
 # %%
