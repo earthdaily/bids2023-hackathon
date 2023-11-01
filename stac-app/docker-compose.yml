@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  stac-app-dev:
+    container_name: stac-app-dev_${USER}
+    image: stac-app-dev_${USER}
+    build:
+      context: .
+      target: dev
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    volumes:
+      - ./:/code
+
+  stac-app:
+    container_name: stac-app_${USER}
+    image: stac-app-${USER}
+    build:
+      context: .
+      target: app
