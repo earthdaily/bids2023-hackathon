@@ -94,8 +94,16 @@ def get_main_page() -> html.Div:
                             ]
                         )
                     ),
-                    dbc.Button("search", id="search-btn"),
-                    dbc.Spinner(html.Div(id="loading-data-cube")),
+                    dbc.Card(
+                        dbc.CardBody(
+                            [
+                                dbc.Button("Search", id="search-btn"),
+                                html.Br(),
+                                html.Br(),
+                                dbc.Spinner(html.Div(id="loading-data-cube")),
+                            ]
+                        )
+                    ),
                     dbc.Card(
                         dbc.CardBody(
                             [

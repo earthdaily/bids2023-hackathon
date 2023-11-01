@@ -9,7 +9,6 @@ import xrspatial.multispectral as ms
 from dash_extensions.enrich import Input, Output, ServersideOutput
 
 from app.app import app
-from app.auth import authenticate_rasterio
 from app.constants import EOProductType
 from app.services import get_image_url
 
@@ -17,7 +16,7 @@ DEFAULT_RESPONSE = (
     None,
     None,
     None,
-    "Please fill in all fields along with a geometry.",
+    "Select a baseline and comparison date to view images",
 )
 
 
@@ -49,15 +48,15 @@ def get_color_images(
     # if triggered by site-selector, then wipe layers
 
     if not ctx.triggered:
-        app.logger.info(
-            "Returning default render urls because water detection not triggered."
-        )
+        app.logger.info("Returning default render urls because color not triggered.")
         return DEFAULT_RESPONSE
 
-    else:
-        trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-    if data is not None and baseline_time is not None and comparison_time is not None and collection_name is not None:
+    if (
+        data is not None
+        and baseline_time is not None
+        and comparison_time is not None
+        and collection_name is not None
+    ):
         try:
             app.logger.info(f"Color render initiated")
             product_type = EOProductType(collection_name)
@@ -110,6 +109,17 @@ def get_color_images(
 
 
 def get_color(data, baseline_date, comparison_date, product_type):
+    baseline_color_image, color_map_bounds = compute_color_at_date(
+        data, baseline_date, product_type
+    )
+    comparison_color_image, color_map_bounds = compute_color_at_date(
+        data, comparison_date, product_type
+    )
+
+    return color_map_bounds, baseline_color_image, comparison_color_image
+
+
+def compute_color_at_date(data, baseline_date, product_type):
     data_at_date = data.sel({"date": baseline_date})
     color = ms.true_color(
         data_at_date.sel({"band": product_type.RGB[0]}).msi,
@@ -117,44 +127,23 @@ def get_color(data, baseline_date, comparison_date, product_type):
         data_at_date.sel({"band": product_type.RGB[2]}).msi,
     )
 
-    # color and water will not always have the same bounds...
     color = color.to_dataset().rio.write_crs(data.rio.crs)
     color = color.transpose("band", "y", "x")
     color = color.rio.reproject("EPSG:4326")
     color = color.transpose("y", "x", "band")
+
     fill_value = color.true_color._FillValue
-    baseline_color_image = color.true_color.values
-    r_fill_index = baseline_color_image[:, :, 0] == fill_value
-    g_fill_index = baseline_color_image[:, :, 1] == fill_value
-    b_fill_index = baseline_color_image[:, :, 2] == fill_value
+
+    color_image = color.true_color.values
+    r_fill_index = color_image[:, :, 0] == fill_value
+    g_fill_index = color_image[:, :, 1] == fill_value
+    b_fill_index = color_image[:, :, 2] == fill_value
     fill_index = np.logical_and(
         np.logical_and(r_fill_index, g_fill_index), b_fill_index
     )
     # set no alpha on fill_value pixels
-    baseline_color_image[fill_index, 3] = 0
-
-    data_at_date = data.sel({"date": comparison_date})
-    color = ms.true_color(
-        data_at_date.sel({"band": product_type.RGB[0]}).msi,
-        data_at_date.sel({"band": product_type.RGB[1]}).msi,
-        data_at_date.sel({"band": product_type.RGB[2]}).msi,
-    )
-
-    color = color.to_dataset().rio.write_crs(data.rio.crs)
-    color = color.transpose("band", "y", "x")
-    color = color.rio.reproject("EPSG:4326")
-    color = color.transpose("y", "x", "band")
-    comparison_color_image = color.true_color.values
-    r_fill_index = comparison_color_image[:, :, 0] == fill_value
-    g_fill_index = comparison_color_image[:, :, 1] == fill_value
-    b_fill_index = comparison_color_image[:, :, 2] == fill_value
-    fill_index = np.logical_and(
-        np.logical_and(r_fill_index, g_fill_index), b_fill_index
-    )
-    # set no alpha on fill_value pixels
-    comparison_color_image[fill_index, 3] = 0
-
+    color_image[fill_index, 3] = 0
     xmin, ymin, xmax, ymax = color.rio.bounds()
     color_map_bounds = [[ymin, xmin], [ymax, xmax]]
 
-    return color_map_bounds, baseline_color_image, comparison_color_image
+    return color_image, color_map_bounds

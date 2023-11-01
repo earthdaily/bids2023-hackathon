@@ -13,6 +13,8 @@ To run the notebooks without leaving Github or setting up a python environment y
 
 In [Goolge Colab](https://research.google.com/colaboratory/), [AWS Sagemaker Studio Lab](https://studiolab.sagemaker.aws/) or on [lightning.ai](https://lightning.ai/) you just need to git clone this repository and then `pip install -r requirements.txt`
 
+To run the `stac-app`, clone the repo to your machine and follow the instructions in `stac-app/README.md`.
+
 # License
 TBC
 

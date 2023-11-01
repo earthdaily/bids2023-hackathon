@@ -64,14 +64,14 @@ def get_datacube(search_trigger, collection, search_geom, start_date, end_date):
             return (
                 dash.no_update,
                 dash.no_update,
-                "Please define start date, end date, and geometry.",
+                "Please define EDS collection, start date, end date, and geometry",
             )
     else:
         app.logger.info(f"Search not ready: some data fields not filled.")
         return (
             dash.no_update,
             dash.no_update,
-            "Please define start date, end date, and geometry.",
+            "Please define EDS collection, start date, end date, and geometry",
         )
 
 
