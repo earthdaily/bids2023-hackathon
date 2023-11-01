@@ -6,7 +6,7 @@ We have three different years (2018, 2019 and 2020) and our workflow trains from
 
 ## Environment Setup
 
-Refer to the base README.md in this repository for environment setup instructions. 
+Refer to the README.md in the base level of this repository for environment setup instructions. 
 
 ## Try It !
 

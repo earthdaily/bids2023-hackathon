@@ -1,6 +1,9 @@
 # Notebooks - Sentinel 2 Modelling
 Note that for faster training of deep learning models you should use a machine with a GPU. Both [Google Colab](https://research.google.com/colaboratory/) and [lightning.ai](https://lightning.ai/) provide limited access to free GPUs which will be sufficient to run the notebooks below.
 
+## Environment Setup
+Refer to the README.md in the base level of this repository for environment setup instructions. 
+
 ## Training and Prediction Using the EuroSAT Dataset
 
 ### train-eurosat.ipynb
@@ -13,3 +16,4 @@ This notebook demonstrates how to use your trained model to make predictions on 
 
 ### oscd-train.ipynb
 Shows training change detection model on OSCD dataset
+
