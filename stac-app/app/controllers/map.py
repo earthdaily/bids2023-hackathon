@@ -20,16 +20,17 @@ from app import utils
         Input(component_id="color-bounds", component_property="data"),
         Input(component_id="color-baseline-url", component_property="data"),
         Input(component_id="color-comparison-url", component_property="data"),
-
     ],
 )
-def render_layers(color_bounds, color_baseline_url, color_comparison_url) -> Tuple[List, List, None]:
+def render_layers(
+    color_bounds, color_baseline_url, color_comparison_url
+) -> Tuple[List, List, None]:
     """
     This controls the rendering of layers in the store
     """
     ctx = dash.callback_context
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    app.logger.info(f"rendering map")
+    app.logger.info(f"Rendering map...")
 
     if color_baseline_url is not None:
         st = datetime.datetime.now()

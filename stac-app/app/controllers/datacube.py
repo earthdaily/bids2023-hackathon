@@ -1,10 +1,10 @@
 import datetime
-from typing import Dict, Tuple, Union, List
+from typing import Dict, List, Tuple, Union
 
 import dash
 import pandas as pd
-import xarray as xr
 import rioxarray as rio  # noqa
+import xarray as xr
 from dash_extensions.enrich import Input, Output, ServersideOutput
 
 from app.app import app
@@ -25,9 +25,7 @@ from app.dal.stac import get_stac_items
         Input(component_id="date-picker-range", component_property="end_date"),
     ],
 )
-def get_datacube(
-    search_trigger, collection, search_geom, start_date, end_date
-) -> Tuple[Union[xr.Dataset, None], Union[Dict, None], str]:
+def get_datacube(search_trigger, collection, search_geom, start_date, end_date):
     """
     Generates a dataset for the selected query
     """
@@ -85,7 +83,6 @@ def get_datacube(
 )
 def get_baseline_times(dates) -> List[Dict]:
     app.logger.info("Get baseline times triggered.")
-    app.logger.info(dates)
 
     return dates
 
@@ -99,15 +96,10 @@ def get_baseline_times(dates) -> List[Dict]:
         Input(component_id="date-selector-baseline", component_property="value"),
     ],
 )
-def get_comparison_times(dates, baseline_date) -> Tuple[Dict, None]:
-    ctx = dash.callback_context
-    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+def get_comparison_times(dates, baseline_date):
     app.logger.info("Get comparison times triggered.")
-    app.logger.info(dates)
-    app.logger.info(baseline_date)
 
     comparison_dates = list()
-
     for date in dates:
         if date["value"] != baseline_date:
             comparison_dates.append(date)

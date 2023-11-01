@@ -33,6 +33,7 @@ docopt==0.6.2
 EditorConfig==0.12.3
 eofs==1.4.0
 ESMPy==8.2.0
+flake8
 Flask==2.1.2
 Flask-Caching==1.10.1
 Flask-Compress==1.12

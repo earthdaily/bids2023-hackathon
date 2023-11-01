@@ -1,8 +1,9 @@
+import datetime
+from datetime import date
+
 import dash_bootstrap_components as dbc
 import dash_leaflet as dl
 from dash_extensions.enrich import dcc, html
-from datetime import date
-import datetime
 
 from app.config import init_bounds
 
@@ -53,9 +54,19 @@ def get_main_page() -> html.Div:
                     dbc.Card(
                         dbc.CardBody(
                             [
-                                html.H5("EDS Collection", style={"font-weight": "bold"}),
-                                dcc.Dropdown(id="eds-collection-selector", options=[{'label': 'Sentinel 2 L2A', 'value': 'sentinel-2-l2a'},
-                                                                                    {'label': 'Venus L2A', 'value': 'venus-l2a'}]),
+                                html.H5(
+                                    "EDS Collection", style={"font-weight": "bold"}
+                                ),
+                                dcc.Dropdown(
+                                    id="eds-collection-selector",
+                                    options=[
+                                        {
+                                            "label": "Sentinel 2 L2A",
+                                            "value": "sentinel-2-l2a",
+                                        },
+                                        {"label": "Venus L2A", "value": "venus-l2a"},
+                                    ],
+                                ),
                             ]
                         )
                     ),
@@ -71,9 +82,9 @@ def get_main_page() -> html.Div:
                                             max_date_allowed=date(
                                                 today.year, today.month, today.day
                                             ),
-                                            initial_visible_month=date(2021, 8, 5),
-                                            start_date=date(2021, 8, 1),
-                                            end_date=date(2021, 8, 4),
+                                            initial_visible_month=date(2023, 8, 1),
+                                            start_date=date(2020, 8, 1),
+                                            end_date=date(2020, 8, 31),
                                         ),
                                         html.Div(
                                             id="output-container-date-picker-range"

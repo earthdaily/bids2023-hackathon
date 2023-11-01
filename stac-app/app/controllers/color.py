@@ -1,16 +1,17 @@
 import datetime
 
 import dash
-import rioxarray  # noqa
-import xarray as xr
-from dash_extensions.enrich import Input, Output, ServersideOutput
-import xrspatial.multispectral as ms
 import numpy as np
 import pandas as pd
+import rioxarray  # noqa
+import xarray as xr
+import xrspatial.multispectral as ms
+from dash_extensions.enrich import Input, Output, ServersideOutput
 
 from app.app import app
+from app.auth import authenticate_rasterio
+from app.constants import EOProductType
 from app.services import get_image_url
-from app.dal.stac import STACBand
 
 DEFAULT_RESPONSE = (
     None,
@@ -33,9 +34,12 @@ DEFAULT_RESPONSE = (
         Input(component_id="dataset-store", component_property="data"),
         Input(component_id="date-selector-baseline", component_property="value"),
         Input(component_id="date-selector-comparison", component_property="value"),
+        Input(component_id="eds-collection-selector", component_property="value"),
     ],
 )
-def get_color_images(data: xr.Dataset, baseline_time: int, comparison_time: int):
+def get_color_images(
+    data: xr.Dataset, baseline_time: int, comparison_time: int, collection_name: str
+):
     """ """
     ctx = dash.callback_context
     app.logger.info("Color retrieval triggered...")
@@ -53,13 +57,10 @@ def get_color_images(data: xr.Dataset, baseline_time: int, comparison_time: int)
     else:
         trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    if trigger_id in ["site-selector"]:
-        app.logger.info("Returning default render urls because site changed.")
-        return DEFAULT_RESPONSE
-
-    if data is not None and baseline_time is not None and comparison_time is not None:
+    if data is not None and baseline_time is not None and comparison_time is not None and collection_name is not None:
         try:
             app.logger.info(f"Color render initiated")
+            product_type = EOProductType(collection_name)
 
             st = datetime.datetime.now()
             baseline_date = pd.Timestamp(baseline_time)
@@ -75,7 +76,7 @@ def get_color_images(data: xr.Dataset, baseline_time: int, comparison_time: int)
                 color_bounds,
                 baseline_color_image,
                 comparison_color_image,
-            ) = get_color(data, baseline_date, comparison_date)
+            ) = get_color(data, baseline_date, comparison_date, product_type)
 
             app.logger.info(f"Loading images...")
 
@@ -108,13 +109,12 @@ def get_color_images(data: xr.Dataset, baseline_time: int, comparison_time: int)
         return DEFAULT_RESPONSE
 
 
-def get_color(data, baseline_date, comparison_date):
+def get_color(data, baseline_date, comparison_date, product_type):
     data_at_date = data.sel({"date": baseline_date})
-    app.logger.info(data_at_date.band)
     color = ms.true_color(
-        data_at_date.sel({"band": "B04"}).msi,
-        data_at_date.sel({"band": "B03"}).msi,
-        data_at_date.sel({"band": "B02"}).msi,
+        data_at_date.sel({"band": product_type.RGB[0]}).msi,
+        data_at_date.sel({"band": product_type.RGB[1]}).msi,
+        data_at_date.sel({"band": product_type.RGB[2]}).msi,
     )
 
     # color and water will not always have the same bounds...
@@ -135,9 +135,9 @@ def get_color(data, baseline_date, comparison_date):
 
     data_at_date = data.sel({"date": comparison_date})
     color = ms.true_color(
-        data_at_date.sel({"band": "B04"}).msi,
-        data_at_date.sel({"band": "B03"}).msi,
-        data_at_date.sel({"band": "B02"}).msi,
+        data_at_date.sel({"band": product_type.RGB[0]}).msi,
+        data_at_date.sel({"band": product_type.RGB[1]}).msi,
+        data_at_date.sel({"band": product_type.RGB[2]}).msi,
     )
 
     color = color.to_dataset().rio.write_crs(data.rio.crs)
