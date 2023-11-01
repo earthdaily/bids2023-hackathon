@@ -53,9 +53,5 @@ The `stac-app` can only be run locally. To run the `stac-app`, clone the repo to
 If you are participating in the BiDS 2023 Hackathon, you should have received credentials to access the EDS. Make a copy of `.env.sample` to `.env` and fill in the credentials and access information as provided. 
 
 
-# License
-TBC
-
-
 # Need Help? 
 If you are participating in the BiDS 2023 Hackathon, you should have received an invite to the Slack channel for communication and coordination prior to the event. Prior to the event, feel free to ask questions in that channel. 

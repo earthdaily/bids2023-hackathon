@@ -16,3 +16,5 @@
  EDS_SECRET=<secret>
  AWS_NO_SIGN_REQUEST=YES
  ```
+
+You will have received the `EDS_CLIENT_ID` and `EDS_SECRET` by the organizers of the hackathon.
