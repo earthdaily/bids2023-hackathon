@@ -1,9 +1,6 @@
 import datetime
-import os
 
 import dash
-import geopandas as gpd
-import rasterio
 import rioxarray  # noqa
 import xarray as xr
 from dash_extensions.enrich import Input, Output, ServersideOutput
@@ -12,9 +9,8 @@ import numpy as np
 import pandas as pd
 
 from app.app import app
-from app.controllers.map import render_layers  # noqa
 from app.services import get_image_url
-
+from app.dal.stac import STACBand
 
 DEFAULT_RESPONSE = (
     None,
@@ -114,6 +110,7 @@ def get_color_images(data: xr.Dataset, baseline_time: int, comparison_time: int)
 
 def get_color(data, baseline_date, comparison_date):
     data_at_date = data.sel({"date": baseline_date})
+    app.logger.info(data_at_date.band)
     color = ms.true_color(
         data_at_date.sel({"band": "B04"}).msi,
         data_at_date.sel({"band": "B03"}).msi,

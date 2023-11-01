@@ -54,7 +54,8 @@ def get_main_page() -> html.Div:
                         dbc.CardBody(
                             [
                                 html.H5("EDS Collection", style={"font-weight": "bold"}),
-                                dcc.Dropdown(id="eds-collection-selector", options=['sentinel-2-l2a', 'venus-l2a'], value=['venus-l2a']),
+                                dcc.Dropdown(id="eds-collection-selector", options=[{'label': 'Sentinel 2 L2A', 'value': 'sentinel-2-l2a'},
+                                                                                    {'label': 'Venus L2A', 'value': 'venus-l2a'}]),
                             ]
                         )
                     ),

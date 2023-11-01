@@ -150,9 +150,25 @@ def get_stac_items(collection: str, geom: Dict, start_date: str, end_date: str) 
     epsg = find_modal_epsg(epsg_codes)
     app.logger.info(f"Number of items returned: {len(items)}")
 
-    app.logger.info(items)
-    app.logger.info(epsg)
-    app.logger.info(array_bounds)
+    stacked_data = stackstac.stack(
+        items,
+        epsg=epsg,
+        bounds_latlon=array_bounds,
+        resolution=VENUS_RESOLUTION_METRES if Collection(collection) == Collection.VENUS_L2A else SENTINEL2_RESOLUTION_METRES,
+        assets=["B02",
+            "B03",
+            "B04",
+            "B05",
+            "B06",
+            "B07",
+            "B08",
+            "B8A",
+            "B09",
+            "B11",
+            "B12",
+            "SCL"],
+    )
+    """
     stacked_data = stackstac.stack(
         items,
         epsg=epsg,
@@ -160,6 +176,18 @@ def get_stac_items(collection: str, geom: Dict, start_date: str, end_date: str) 
         resolution=VENUS_RESOLUTION_METRES if Collection(collection) == Collection.VENUS_L2A else SENTINEL2_RESOLUTION_METRES,
         assets=COLLECTION_ASSET_MAPPING[Collection(collection)],
     )
+
+    if Collection(collection) == Collection.VENUS_L2A:
+        stac_band_name_mapping= {
+        "image_file_SRE_B3": STACBand.BLUE, 
+        "image_file_SRE_B4": STACBand.GREEN, 
+        "image_file_SRE_B7": STACBand.RED,
+        "image_file_SRE_B8": STACBand.REDEDGE1,
+        "image_file_SRE_B9": STACBand.REDEDGE2,
+        "image_file_SRE_B10": STACBand.NIR}
+
+        stacked_data = stacked_data.assign_coords({"band": [stac_band_name_mapping.get(band) for band in stacked_data.band.values]})
+    """
 
     data = stacked_data.to_dataset()
     data = data.rename({[i for i in data.data_vars][0]: "msi"})

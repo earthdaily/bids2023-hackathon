@@ -6,7 +6,7 @@ import dash_leaflet as dl
 from dash_extensions.enrich import Input, Output
 
 from app.app import app
-from app.layers import base_layer
+from app.layers import base_layer, venus_layer
 from app import utils
 
 
@@ -62,8 +62,8 @@ def render_layers(color_bounds, color_baseline_url, color_comparison_url) -> Tup
         app.logger.info(f"Map drawn - {delta}s")
         app.logger.info(f"Bounds - {color_bounds}")
 
-        return [base_layer] + layers, [], dash.no_update
+        return [base_layer] + layers, [venus_layer], dash.no_update
     else:
         app.logger.info(f"Not drawing any map layers because no urls available.")
 
-        return [base_layer], [], dash.no_update
+        return [base_layer], [venus_layer], dash.no_update

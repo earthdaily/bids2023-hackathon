@@ -19,7 +19,6 @@ from app.dal.stac import get_stac_items
     ],
     [
         Input(component_id="search-btn", component_property="n_clicks"),
-        Input(component_id="edit-control", component_property="geojson"),
         Input(component_id="eds-collection-selector", component_property="value"),
         Input(component_id="edit-control", component_property="geojson"),
         Input(component_id="date-picker-range", component_property="start_date"),
