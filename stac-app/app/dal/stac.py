@@ -1,5 +1,7 @@
 import json
 from typing import Tuple
+from enum import Enum
+from typing import Dict
 
 import geopandas as gpd
 import numpy as np
@@ -14,6 +16,62 @@ from app.utils import convert_wgs_to_utm
 from app.app import app
 from shapely.geometry import Polygon
 
+
+VENUS_RESOLUTION_METRES = 5
+VENUS_FILL_VALUE = -10000
+SENTINEL2_FILL_VALUE = 0
+SENTINEL2_RESOLUTION_METRES = 10
+SENTINEL2_NORMALIZATION_FACTOR = 10000
+
+
+class STACBand(str, Enum):
+    BLUE = "blue"
+    GREEN = "green"
+    RED = "red",
+    REDEDGE1 = "rededge1"
+    REDEDGE2 = "rededge2"
+    REDEDGE3 = "rededge3"
+    NIR = "nir"
+    NIR08 = "nir08"
+    NIR09 = "nir09"
+    CIRRUS = "cirrus"
+    SCL = "scl"
+    SWIR16 = "swir16"
+    SWIR22 = "swir22"
+    VV = 'vv'
+    VH = 'vh'
+
+    def __str__(self):
+        return self.value
+
+class Collection(Enum):
+    SENTINEL_2_L2A = 'sentinel-2-l2a'
+    VENUS_L2A = 'venus-l2a'
+
+COLLECTION_ASSET_MAPPING = {
+    Collection.SENTINEL_2_L2A: [
+            STACBand.BLUE,
+            STACBand.GREEN,
+            STACBand.RED,
+            STACBand.REDEDGE1,
+            STACBand.REDEDGE2,
+            STACBand.REDEDGE3,
+            STACBand.NIR,
+            STACBand.NIR08,
+            STACBand.NIR09,
+            STACBand.CIRRUS,
+            STACBand.SCL,
+            STACBand.SWIR16,
+            STACBand.SWIR22
+    ],
+    Collection.VENUS_L2A: [            
+            "image_file_SRE_B3",
+            "image_file_SRE_B4",
+            "image_file_SRE_B7",
+            "image_file_SRE_B8" ,
+            "image_file_SRE_B9" ,
+            "image_file_SRE_B10"]
+}
 
 class SCLMaskLabel:
     # Note: This is for Sentinel2 L2A only
@@ -68,12 +126,12 @@ def find_modal_epsg(epsg_codes):
     return modal_epsg_code
 
 
-def get_stac_items(geom, start_date, end_date) -> xr.Dataset:
+def get_stac_items(collection: str, geom: Dict, start_date: str, end_date: str) -> xr.Dataset:
     catalog = Client.open(STAC_API_URL)
     geometry = gpd.GeoDataFrame.from_features(geom["features"], crs="EPSG:4326")
 
     search = catalog.search(
-        collections=["sentinel-2-l2a"],
+        collections=[collection],
         intersects=geom["features"][0]["geometry"],
         datetime=f"{start_date}/{end_date}",
     )
@@ -99,21 +157,8 @@ def get_stac_items(geom, start_date, end_date) -> xr.Dataset:
         items,
         epsg=epsg,
         bounds_latlon=array_bounds,
-        resolution=10,
-        assets=[
-            "B02",
-            "B03",
-            "B04",
-            "B05",
-            "B06",
-            "B07",
-            "B08",
-            "B8A",
-            "B09",
-            "B11",
-            "B12",
-            "SCL",
-        ],
+        resolution=VENUS_RESOLUTION_METRES if Collection(collection) == Collection.VENUS_L2A else SENTINEL2_RESOLUTION_METRES,
+        assets=COLLECTION_ASSET_MAPPING[Collection(collection)],
     )
 
     data = stacked_data.to_dataset()

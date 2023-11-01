@@ -20,12 +20,14 @@ from app.dal.stac import get_stac_items
     [
         Input(component_id="search-btn", component_property="n_clicks"),
         Input(component_id="edit-control", component_property="geojson"),
+        Input(component_id="eds-collection-selector", component_property="value"),
+        Input(component_id="edit-control", component_property="geojson"),
         Input(component_id="date-picker-range", component_property="start_date"),
         Input(component_id="date-picker-range", component_property="end_date"),
     ],
 )
 def get_datacube(
-    search_trigger, search_geom, start_date, end_date
+    search_trigger, collection, search_geom, start_date, end_date
 ) -> Tuple[Union[xr.Dataset, None], Union[Dict, None], str]:
     """
     Generates a dataset for the selected query
@@ -43,7 +45,7 @@ def get_datacube(
             app.logger.info(end_date)
 
             st = datetime.datetime.now()
-            data = get_stac_items(search_geom, start_date, end_date)
+            data = get_stac_items(collection, search_geom, start_date, end_date)
             time_values = data.date.values
             for time in time_values:
                 dates.append(
