@@ -21,3 +21,4 @@ contextily
 earthdaily
 folium
 mapclassify
+python-dotenv
