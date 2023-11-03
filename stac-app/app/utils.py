@@ -4,6 +4,16 @@ import geopandas as gpd
 import numpy as np
 import xarray as xr
 from shapely.geometry import Polygon
+import pickle
+from pathlib import Path
+
+def save_to_pickle(obj, filename: Path):
+
+    path = Path(filename)
+    if not path.parent.exists():
+        path.parent.mkdir(parents=True)
+    with path.open("wb") as fp:
+        pickle.dump(obj, fp)
 
 
 def get_selected_utm_epsg(aoi) -> int:

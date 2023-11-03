@@ -6,4 +6,5 @@ docker run \
 -e EDS_SECRET="$EDS_SECRET" \
 -e EDS_API_URL="$EDS_API_URL" \
 -e AWS_NO_SIGN_REQUEST="$AWS_NO_SIGN_REQUEST" \
+-v ./:/code \
 -it --rm -p 8050:8050 stac-app

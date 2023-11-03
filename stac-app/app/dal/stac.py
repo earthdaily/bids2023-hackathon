@@ -15,7 +15,7 @@ from app.auth import get_new_token
 
 
 def get_stac_items(
-    collection_name: str, geom: Dict, start_date: str, end_date: str
+    collection_name: str, geom: Dict, start_date: str, end_date: str, cloud_cover: int
 ) -> xr.Dataset:
 
     catalog = Client.open(
@@ -30,6 +30,7 @@ def get_stac_items(
         collections=[product_type.value],
         intersects=geom["features"][0]["geometry"],
         datetime=f"{start_date}/{end_date}",
+        query={"eo:cloud_cover": {"lt": cloud_cover}}
     )
 
     items = [item.to_dict() for item in query_result.get_items()]
