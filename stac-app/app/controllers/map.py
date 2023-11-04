@@ -20,10 +20,13 @@ from app import utils
         Input(component_id="color-bounds", component_property="data"),
         Input(component_id="color-baseline-url", component_property="data"),
         Input(component_id="color-comparison-url", component_property="data"),
+        Input(component_id="segmentation-bounds", component_property="data"),
+        Input(component_id="segmentation-baseline-url", component_property="data"),
+        Input(component_id="segmentation-comparison-url", component_property="data"),
     ],
 )
 def render_layers(
-    color_bounds, color_baseline_url, color_comparison_url
+    color_bounds, color_baseline_url, color_comparison_url, segmentation_bounds, segmentation_baseline_url, segmentation_comparison_url
 ) -> Tuple[List, List, None]:
     """
     This controls the rendering of layers in the store
@@ -57,14 +60,40 @@ def render_layers(
                 checked=True,
             ),
         ]
-
-        et = datetime.datetime.now()
-        delta = (et - st).seconds
-        app.logger.info(f"Map drawn - {delta}s")
-        app.logger.info(f"Bounds - {color_bounds}")
-
-        return [base_layer] + layers, [venus_layer], dash.no_update
     else:
         app.logger.info(f"Not drawing any map layers because no urls available.")
 
         return [base_layer], [venus_layer], dash.no_update
+
+    if segmentation_baseline_url is not None:
+        layers += [
+            dl.Overlay(
+                dl.ImageOverlay(
+                    className="img",
+                    id="segmentation-baseline",
+                    url=segmentation_baseline_url,
+                    bounds=segmentation_bounds,
+                ),
+                name="Baseline Segmentation",
+                checked=True,
+            ),
+            dl.Overlay(
+                dl.ImageOverlay(
+                    className="img",
+                    id="segmentation-comparison",
+                    url=segmentation_comparison_url,
+                    bounds=segmentation_bounds,
+                ),
+                name="Comparison Segmentation",
+                checked=True,
+            ),
+        ]
+
+    et = datetime.datetime.now()
+    delta = (et - st).seconds
+    app.logger.info(f"Map drawn - {delta}s")
+    app.logger.info(f"Bounds - {color_bounds}")
+
+    return [base_layer] + layers, [venus_layer], dash.no_update
+
+

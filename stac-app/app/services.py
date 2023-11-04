@@ -24,7 +24,6 @@ class Renderer:
         if channels == 1:
             self.is_color = False
             alpha = np.ones(self.array.shape)
-            alpha[self.array == 0] = 0
             self.alpha = alpha
         else:
             self.is_color = True
@@ -39,8 +38,17 @@ class Renderer:
             g = self.array * self.color_dict[colormap]["g"]
             b = self.array * self.color_dict[colormap]["b"]
 
-        else:
-            raise ValueError(f"Unsupported colormap: {colormap}")
+        elif colormap == "random_classes":
+            cat_map = np.squeeze(self.array)
+            color_array = np.zeros((cat_map.shape[0], cat_map.shape[1], 3)).astype('uint8')
+            unique_values = np.unique(cat_map)
+
+            for val in unique_values:
+                class_color_rgb = 255 * np.random.rand(3)
+                class_color_rgb = class_color_rgb.astype('uint8')
+                color_array[cat_map == val, :] = class_color_rgb
+                
+            return np.dstack([color_array, self.alpha])
 
         return np.dstack([r, g, b, self.alpha])
 

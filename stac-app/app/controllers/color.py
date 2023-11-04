@@ -45,8 +45,6 @@ def get_color_images(
     app.logger.info(baseline_time)
     app.logger.info(comparison_time)
 
-    # if triggered by site-selector, then wipe layers
-
     if not ctx.triggered:
         app.logger.info("Returning default render urls because color not triggered.")
         return DEFAULT_RESPONSE
