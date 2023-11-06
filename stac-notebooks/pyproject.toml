@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "stac-notebooks"
+version = "0.1.0"
+description = ""
+authors = ["Osorio Rodrigues <osorio.rodrigues@digi-lab.io>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11,<3.13"
+numpy = "^1.26.1"
+dask = "^2023.10.1"
+geopandas = "^0.14.0"
+shapely = "^2.0.2"
+ipython = "^8.17.2"
+matplotlib = "^3.8.1"
+xarray = "^2023.10.1"
+pillow = "^10.1.0"
+pystac-client = "^0.7.5"
+odc-stac = "^0.3.7"
+pandas = "^2.1.2"
+python-dotenv = "^1.0.0"
+boto3 = "^1.28.78"
+leafmap = "^0.27.2"
+seaborn = "^0.13.0"
+rioxarray = "^0.15.0"
+folium = "^0.14.0"
+scikit-learn = "^1.3.2"
+rasterio = "^1.3.9"
+torchgeo = "^0.5.0"
+distributed = "^2023.10.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
